@@ -2,7 +2,7 @@
 
 ## Voraussetzungen
 
-- Docker & Docker Compose
+- Docker & Docker Compose sind installiert
 
 ## Start
 
