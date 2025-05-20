@@ -7,6 +7,8 @@ dotenv.config();
 //const app = express();
 const router = express.Router();
 
+const createActionResponse = (code, message) => ({ code, message });
+
 //app.use(bodyParser.json());
 
 // --- API Routes ---
@@ -18,7 +20,7 @@ router.get('/', async (req, res) => {
 
     try {
         const query = `
-      SELECT name, status, platform, last_heartbeat
+      SELECT *
       FROM test_runners
       ORDER BY name
       LIMIT $1 OFFSET $2`;
@@ -28,12 +30,7 @@ router.get('/', async (req, res) => {
             return res.status(404).json(createActionResponse(404, "No test runners found."));
         }
 
-        res.status(200).json(rows.map(r => ({
-            name: r.name,
-            status: r.status,
-            platform: r.platform || [],
-            lastHeartbeat: r.last_heartbeat ? new Date(r.last_heartbeat).getTime() : null
-        })));
+        res.status(200).json(rows);
     } catch (error) {
         console.error("Error fetching test runners:", error);
         res.status(500).json(createActionResponse(500, "Failed to retrieve test runners."));
@@ -74,18 +71,18 @@ router.post('/:id/heartbeat', async (req, res) => {
         const newStatus = runner.status === 'RUNNING' ? 'RUNNING' : 'IDLE';
 
         await db.query(`
-      UPDATE test_runners
-      SET last_heartbeat = $1,
-          status = $2,
-          last_feedback = $3,
-          last_update = $4
-      WHERE id = $5
+        UPDATE test_runners
+        SET last_heartbeat = $1,
+            status = $2,
+            last_feedback = $3,
+            last_update = $4
+        WHERE id = $5
     `, [
-            heartbeatTimestamp,
-            newStatus,
-            'Heartbeat received successfully.',
-            now.toISOString(),
-            id
+          heartbeatTimestamp,
+          newStatus,
+          'Heartbeat received successfully.',
+          now.toISOString(),
+          id
         ]);
 
         console.log(`Heartbeat received from runner ${id}.`);
