@@ -46,7 +46,7 @@ router.get('/:id', async (req, res) => {
     }
 
     try {
-			const result = await db.query('SELECT * FROM test_details WHERE id = $1', [id]);
+			const result = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
 			if (result.rows.length > 0) {
 				res.status(200).json(result.rows[0]);
 			} else {
@@ -106,7 +106,7 @@ router.delete('/:id', async (req, res) => {
     try {
         const result = await db.query('DELETE FROM tests WHERE id = $1 RETURNING *', [id]);
         if (result.rows.length > 0) {
-            await db.query('DELETE FROM test_details WHERE id = $1', [id]);
+            await db.query('DELETE FROM tests WHERE id = $1', [id]);
             res.status(200).json(createActionResponse(200, `Test ${id} deleted successfully.`));
         } else {
             res.status(404).json(createActionResponse(404, "Test not found"));
@@ -137,7 +137,7 @@ router.post('/:id/restart', async (req, res) => {
         `, [id]);
 
         await db.query(`
-            UPDATE test_details
+            UPDATE tests
             SET status = 'Pending', progress = 0, start_time = NULL, elapsed_seconds = 0
             WHERE id = $1
         `, [id]);

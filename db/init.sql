@@ -53,9 +53,9 @@ VALUES
 
 INSERT INTO available_tests (id, name)
 VALUES
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Login Functionality Test'),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'API Load Test'),
-  ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Frontend UI Test');
+  ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Login Functionality Test'),
+  ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'API Load Test'),
+  ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'Frontend UI Test');
 
 INSERT INTO tests (
     id, name, status, test_runner_id, progress,
