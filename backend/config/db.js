@@ -1,10 +1,10 @@
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
-dotenv.config(); // 用于从 .env 文件加载环境变量
+dotenv.config(); 
 
 const pool = new Pool({
-  host: POSTGRES_HOST, // Hostname des Datenbank-Containers (siehe docker-compose)
+  host: process.env.POSTGRES_HOST, 
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DB,

@@ -2,14 +2,13 @@ import express from 'express';
 import bodyParser from 'body-parser';
 //import { simpleGit } from 'simple-git';
 import dotenv from 'dotenv';
-import db from './db.js';
+import db from '../config/db.js';
 
 dotenv.config();
 
-const app = express();
-//const port = ??
+const router = express.Router();
 
-app.use(bodyParser.json());
+//app.use(bodyParser.json());
 
 const TestRepo_URL = 'https://github.com/SOURCEPARK/TestPlans.git';
 
@@ -18,41 +17,41 @@ const createActionResponse = (code, message) => ({ code, message });
 
 // --- API Routes ---
 // GET /test - Get paginated list of tests
-app.get('/test', async (req, res) => {
+router.get('/test', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
     try {
-        const result = await db.query(
-            `SELECT id, name, status, test_runner AS "testRunner", last_heartbeat AS "lastHeartbeat", progress
+			const result = await db.query(
+				`SELECT id, name, status, test_runner AS "testRunner", last_heartbeat AS "lastHeartbeat", progress
 				FROM tests
 				ORDER BY id
 				LIMIT $1 OFFSET $2`,
-            [limit, offset]
-        );
+				[limit, offset]
+			);
 
-        res.status(200).json(result.rows);
+			res.status(200).json(result.rows);
     } catch (err) {
-        console.error('Database query error:', err);
-        res.status(500).json({ error: 'Internal server error' });
+			console.error('Database query error:', err);
+			res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 // GET /test/{id} - Get detailed test information
-app.get('/test/:id', async (req, res) => {
+router.get('/test/:id', async (req, res) => {
     const { id } = req.params;
     if (!id) {
-        return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
+			return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
     }
 
     try {
-        const result = await db.query('SELECT * FROM test_details WHERE id = $1', [id]);
-        if (result.rows.length > 0) {
-            res.status(200).json(result.rows[0]);
-        } else {
-            res.status(404).json(createActionResponse(404, "Test not found"));
-        }
+			const result = await db.query('SELECT * FROM test_details WHERE id = $1', [id]);
+			if (result.rows.length > 0) {
+				res.status(200).json(result.rows[0]);
+			} else {
+				res.status(404).json(createActionResponse(404, "Test not found"));
+			}
     } catch (error) {
         console.error(error);
         res.status(500).json(createActionResponse(500, "Database error"));
@@ -60,7 +59,7 @@ app.get('/test/:id', async (req, res) => {
 });
 
 // POST /test/start - Start a test
-app.post('/test/start', async (req, res) => {
+router.post('/test/start', async (req, res) => {
     const { testId, testRunnerId } = req.body;
 
     if (!testId || !testRunnerId) {
@@ -68,37 +67,37 @@ app.post('/test/start', async (req, res) => {
     }
 
     try {
-        const testResult = await pool.query('SELECT * FROM tests WHERE id = $1', [testId]);
-        const runnerResult = await pool.query('SELECT * FROM test_runners WHERE id = $1', [testRunnerId]);
+			const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [testId]);
+			const runnerResult = await db.query('SELECT * FROM test_runners WHERE id = $1', [testRunnerId]);
 
-        if (testResult.rows.length === 0) {
-            return res.status(404).json(createActionResponse(404, `Test mit id ${testId} not found.`));
-        }
-        if (runnerResult.rows.length === 0) {
-            return res.status(404).json(createActionResponse(404, `Test runner mit id ${testRunnerId} not found.`));
-        }
+			if (testResult.rows.length === 0) {
+				return res.status(404).json(createActionResponse(404, `Test mit id ${testId} not found.`));
+			}
+			if (runnerResult.rows.length === 0) {
+				return res.status(404).json(createActionResponse(404, `Test runner mit id ${testRunnerId} not found.`));
+			}
 
-        const runner = runnerResult.rows[0];
-        if (runner.status === 'RUNNING') {
-            return res.status(409).json(createActionResponse(409, `Test runner ${runner.name} is currently busy.`));
-        }
-        if (runner.status === 'ERROR') {
-            return res.status(409).json(createActionResponse(409, `Test runner ${runner.name} is not available.`));
-        }
+			const runner = runnerResult.rows[0];
+			if (runner.status === 'RUNNING') {
+				return res.status(409).json(createActionResponse(409, `Test runner ${runner.name} is currently busy.`));
+			}
+			if (runner.status === 'ERROR') {
+				return res.status(409).json(createActionResponse(409, `Test runner ${runner.name} is not available.`));
+			}
 
-        // Update test status and test runner status in the database
-        await db.query('UPDATE tests SET status = $1, test_runner = $2 WHERE id = $3', ['RUNNING', testRunnerId, testId]);
-        await db.query('UPDATE test_runners SET status = $1 WHERE id = $2', ['RUNNING', testRunnerId]);
+			// Update test status and test runner status in the database
+			await db.query('UPDATE tests SET status = $1, test_runner = $2 WHERE id = $3', ['RUNNING', testRunnerId, testId]);
+			await db.query('UPDATE test_runners SET status = $1 WHERE id = $2', ['RUNNING', testRunnerId]);
 
-        res.status(200).json(createActionResponse(200, `Test ${testId} started with runner ${testRunnerId}`));
+			res.status(200).json(createActionResponse(200, `Test ${testId} started with runner ${testRunnerId}`));
     } catch (error) {
-        console.error(error);
-        res.status(500).json(createActionResponse(500, "Database error"));
+			console.error(error);
+			res.status(500).json(createActionResponse(500, "Database error"));
     }
 });
 
 // DELETE /test/{id} - Delete a test
-app.delete('/test/:id', async (req, res) => {
+router.delete('/test/:id', async (req, res) => {
     const { id } = req.params;
     if (!id) {
         return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
@@ -119,7 +118,7 @@ app.delete('/test/:id', async (req, res) => {
 });
 
 // POST /test/{id}/restart - Restart a test
-app.post('/test/:id/restart', async (req, res) => {
+router.post('/test/:id/restart', async (req, res) => {
     const { id } = req.params;
     if (!id) {
         return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
@@ -152,7 +151,7 @@ app.post('/test/:id/restart', async (req, res) => {
 });
 
 // GET /test/{id}/status - Get current test status
-app.get('/test/:id/status', async (req, res) => {
+router.get('/test/:id/status', async (req, res) => {
     const { id } = req.params;
     if (!id) {
         return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
@@ -173,9 +172,9 @@ app.get('/test/:id/status', async (req, res) => {
 });
 
 // GET /available-tests - Get all available tests
-app.get('/available-tests', async (req, res) => {
+router.get('/available-tests', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM available_tests');
+        const result = await db.query('SELECT * FROM available_tests');
         res.status(200).json(result.rows);
     } catch (err) {
         console.error(err);
@@ -184,31 +183,31 @@ app.get('/available-tests', async (req, res) => {
 });
 
 // GET /test/{id}/runners - Get available test runners for a test
-app.get('/test/:id/runners', async (req, res) => {
+router.get('/test/:id/runners', async (req, res) => {
     const { id } = req.params;
     if (!id) {
-        return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
+			return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
     }
 
     try {
-        const testResult = await db.query('SELECT id FROM tests WHERE id = $1', [id]);
-        if (testResult.rows.length === 0) {
-            return res.status(404).json(createActionResponse(404, "Test ID not found"));
-        }
+			const testResult = await db.query('SELECT id FROM tests WHERE id = $1', [id]);
+			if (testResult.rows.length === 0) {
+				return res.status(404).json(createActionResponse(404, "Test ID not found"));
+			}
 
-        const runnerResult = await db.query(`
-            SELECT id, name FROM test_runners WHERE status NOT IN ('ERROR', 'RUNNING')
-        `);
+			const runnerResult = await db.query(`
+				SELECT id, name FROM test_runners WHERE status NOT IN ('ERROR', 'RUNNING')
+			`);
 
-        res.status(200).json(runnerResult.rows);
+			res.status(200).json(runnerResult.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json(createActionResponse(500, "Database error"));
+			console.error(err);
+			res.status(500).json(createActionResponse(500, "Database error"));
     }
 });
 
 // POST /test/reload - Trigger test reload from GitHub
-app.post('/test/reload', (req, res) => {
+router.post('/test/reload', (req, res) => {
     console.log("Test reload from GitHub.");
     //TODO: git pull or fetch from GitHub
     // tests = fetchTestsFromGitHub();
@@ -216,6 +215,8 @@ app.post('/test/reload', (req, res) => {
 });
 
 // GET /test/last-reload - Get last reload timestamp
-app.get('/test/last-reload', (req, res) => {
+router.get('/test/last-reload', (req, res) => {
     res.status(200).json({ lastReload: lastReloadTimestamp });
 });
+
+export default router;

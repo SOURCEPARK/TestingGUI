@@ -1,13 +1,17 @@
 import express from 'express';
+import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
+import db from '../config/db.js';
 
-const app = express();
+dotenv.config();
+//const app = express();
+const router = express.Router();
 
-app.use(bodyParser.json());
+//app.use(bodyParser.json());
 
 // --- API Routes ---
 // GET /test-runners - Get paginated list of test runners
-app.get('/test-runners', async (req, res) => {
+router.get('/test-runners', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -37,7 +41,7 @@ app.get('/test-runners', async (req, res) => {
 });
 
 // GET /test-runner/{id} - Get detailed runner info
-app.get('/test-runner/:id', async (req, res) => {
+router.get('/test-runner/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const result = await db.query('SELECT * FROM test_runners WHERE id = $1', [id]);
@@ -54,7 +58,7 @@ app.get('/test-runner/:id', async (req, res) => {
 });
 
 // POST /test-runner/{id}/heartbeat - Send heartbeat to runner
-app.post('/test-runner/:id/heartbeat', async (req, res) => {
+router.post('/test-runner/:id/heartbeat', async (req, res) => {
     const { id } = req.params;
     try {
         const result = await db.query('SELECT * FROM test_runners WHERE id = $1', [id]);
@@ -91,3 +95,5 @@ app.post('/test-runner/:id/heartbeat', async (req, res) => {
         res.status(500).json(createActionResponse(500, "Database error"));
     }
 });
+
+export default router;

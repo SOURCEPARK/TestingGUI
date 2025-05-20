@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   backend:
@@ -20,7 +20,8 @@ services:
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: mydb
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      #- pgdata:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     networks:

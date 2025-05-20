@@ -1,7 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const { getTime } = require('../controllers/timeController');
+import { Router } from 'express';
+const router = Router();
+import { getTime } from '../controllers/timeController.js';
 
 router.get('/', getTime);
 
-module.exports = router;
+export default router;

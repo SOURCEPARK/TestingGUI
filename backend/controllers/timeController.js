@@ -1,11 +1,13 @@
-const pool = require('../config/db');
+import db from '../config/db.js';
 
-exports.getTime = async (req, res) => {
+const { query } = db;
+
+export async function getTime(req, res) {
   try {
-    const result = await pool.query('SELECT NOW()');
+    const result = await query('SELECT NOW()');
     res.send(`Datenbankzeit: ${result.rows[0].now}`);
   } catch (err) {
     console.error(err);
     res.status(500).send('Fehler bei der DB-Verbindung');
   }
-};
+}
