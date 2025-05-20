@@ -11,7 +11,7 @@ const router = express.Router();
 
 // --- API Routes ---
 // GET /test-runners - Get paginated list of test runners
-router.get('/test-runners', async (req, res) => {
+router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -41,7 +41,7 @@ router.get('/test-runners', async (req, res) => {
 });
 
 // GET /test-runner/{id} - Get detailed runner info
-router.get('/test-runner/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const result = await db.query('SELECT * FROM test_runners WHERE id = $1', [id]);
@@ -58,7 +58,7 @@ router.get('/test-runner/:id', async (req, res) => {
 });
 
 // POST /test-runner/{id}/heartbeat - Send heartbeat to runner
-router.post('/test-runner/:id/heartbeat', async (req, res) => {
+router.post('/:id/heartbeat', async (req, res) => {
     const { id } = req.params;
     try {
         const result = await db.query('SELECT * FROM test_runners WHERE id = $1', [id]);

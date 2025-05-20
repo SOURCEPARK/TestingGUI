@@ -17,7 +17,7 @@ const createActionResponse = (code, message) => ({ code, message });
 
 // --- API Routes ---
 // GET /test - Get paginated list of tests
-router.get('/test', async (req, res) => {
+router.get('/', async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -39,7 +39,7 @@ router.get('/test', async (req, res) => {
 });
 
 // GET /test/{id} - Get detailed test information
-router.get('/test/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
     const { id } = req.params;
     if (!id) {
 			return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
@@ -59,7 +59,7 @@ router.get('/test/:id', async (req, res) => {
 });
 
 // POST /test/start - Start a test
-router.post('/test/start', async (req, res) => {
+router.post('/start', async (req, res) => {
     const { testId, testRunnerId } = req.body;
 
     if (!testId || !testRunnerId) {
@@ -97,7 +97,7 @@ router.post('/test/start', async (req, res) => {
 });
 
 // DELETE /test/{id} - Delete a test
-router.delete('/test/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     if (!id) {
         return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
@@ -118,7 +118,7 @@ router.delete('/test/:id', async (req, res) => {
 });
 
 // POST /test/{id}/restart - Restart a test
-router.post('/test/:id/restart', async (req, res) => {
+router.post('/:id/restart', async (req, res) => {
     const { id } = req.params;
     if (!id) {
         return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
@@ -151,7 +151,7 @@ router.post('/test/:id/restart', async (req, res) => {
 });
 
 // GET /test/{id}/status - Get current test status
-router.get('/test/:id/status', async (req, res) => {
+router.get('/:id/status', async (req, res) => {
     const { id } = req.params;
     if (!id) {
         return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
@@ -183,7 +183,7 @@ router.get('/available-tests', async (req, res) => {
 });
 
 // GET /test/{id}/runners - Get available test runners for a test
-router.get('/test/:id/runners', async (req, res) => {
+router.get('/:id/runners', async (req, res) => {
     const { id } = req.params;
     if (!id) {
 			return res.status(400).json(createActionResponse(400, "Missing test ID in request parameters."));
@@ -207,7 +207,7 @@ router.get('/test/:id/runners', async (req, res) => {
 });
 
 // POST /test/reload - Trigger test reload from GitHub
-router.post('/test/reload', (req, res) => {
+router.post('/reload', (req, res) => {
     console.log("Test reload from GitHub.");
     //TODO: git pull or fetch from GitHub
     // tests = fetchTestsFromGitHub();
