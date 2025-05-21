@@ -1,7 +1,5 @@
 import db from '../config/db.js';
 
-const createActionResponse = (code, message) => ({ code, message });
-
 export const getAllRunners = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -16,13 +14,13 @@ export const getAllRunners = async (req, res) => {
 
     const { rows } = await db.query(query, [limit, offset]);
     if (rows.length === 0) {
-      return res.status(404).json(createActionResponse(404, "No test runners found."));
+      return res.status(404).json("No test runners found.");
     }
 
     res.status(200).json(rows);
   } catch (error) {
     console.error("Error fetching test runners:", error);
-    res.status(500).json(createActionResponse(500, "Failed to retrieve test runners."));
+    res.status(500).json("Failed to retrieve test runners.");
   }
 };
 
@@ -34,11 +32,11 @@ export const getRunnerById = async (req, res) => {
     if (result.rows.length > 0) {
       res.status(200).json(result.rows[0]);
     } else {
-      res.status(404).json(createActionResponse(404, "Test runner not found"));
+      res.status(404).json("Test runner not found");
     }
   } catch (error) {
     console.error("Database error:", error);
-    res.status(500).json(createActionResponse(500, "Database error"));
+    res.status(500).json("Database error");
   }
 };
 
@@ -48,7 +46,7 @@ export const sendHeartbeat = async (req, res) => {
     const result = await db.query('SELECT * FROM test_runners WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
-      return res.status(404).json(createActionResponse(404, "Test runner not found"));
+      return res.status(404).json("Test runner not found");
     }
 
     const runner = result.rows[0];
@@ -72,9 +70,9 @@ export const sendHeartbeat = async (req, res) => {
     ]);
 
     console.log(`Heartbeat received from runner ${id}.`);
-    res.status(200).json(createActionResponse(200, `Heartbeat acknowledged for runner ${id}.`));
+    res.status(200).json(`Heartbeat acknowledged for runner ${id}.`);
   } catch (error) {
     console.error("Database error:", error);
-    res.status(500).json(createActionResponse(500, "Database error"));
+    res.status(500).json("Database error");
   }
 };
