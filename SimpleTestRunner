@@ -1,0 +1,53 @@
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
+
+# Definiere den Handler, der auf HTTP-Anfragen reagiert
+class SimpleRequestHandler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        # Beispiel: Antwort auf GET-Anfrage
+        if self.path == "/test":
+            response = {
+                "message": "Test ist gelungen!",
+                "status": "Jawohl Bruder"
+            }
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_POST(self):
+        # Beispiel: Antwort auf POST-Anfrage
+        if self.path == "/test":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+
+            # Simuliere, dass wir die JSON-Daten empfangen und bearbeiten
+            data = json.loads(post_data)
+
+            response = {
+                "received": data,
+                "status": "OK"
+            }
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+# Server starten
+def run(server_class=HTTPServer, handler_class=SimpleRequestHandler, port=8082):
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    print(f"Starte Server auf Port {port}...")
+    httpd.serve_forever()
+
+if __name__ == '__main__':
+    run()
+
