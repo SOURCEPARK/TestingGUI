@@ -9,7 +9,7 @@ export const getAllRunners = async (req, res) => {
 
   try {
     const query = `
-      SELECT name, status, platform, last_heartbeat
+      SELECT *
       FROM test_runners
       ORDER BY name
       LIMIT $1 OFFSET $2`;
@@ -19,12 +19,7 @@ export const getAllRunners = async (req, res) => {
       return res.status(404).json(createActionResponse(404, "No test runners found."));
     }
 
-    res.status(200).json(rows.map(r => ({
-      name: r.name,
-      status: r.status,
-      platform: r.platform || [],
-      lastHeartbeat: r.last_heartbeat ? new Date(r.last_heartbeat).getTime() : null
-    })));
+    res.status(200).json(rows);
   } catch (error) {
     console.error("Error fetching test runners:", error);
     res.status(500).json(createActionResponse(500, "Failed to retrieve test runners."));

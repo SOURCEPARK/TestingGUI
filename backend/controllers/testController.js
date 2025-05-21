@@ -171,6 +171,7 @@ export const reloadTests = (req, res) => {
   res.status(200).json(createActionResponse(200, `Test plans reloaded. Last reload: ${lastReloadTimestamp}`));
 };
 
-export const getLastReload = (req, res) => {
-  res.status(200).json({ lastReload: lastReloadTimestamp });
+export const getLastReload = async (req, res) => {
+  const result = await db.query('SELECT id, name, last_reload FROM tests');
+  res.status(200).json(result.rows);
 };

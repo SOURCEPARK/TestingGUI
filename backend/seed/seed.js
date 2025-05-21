@@ -1,10 +1,7 @@
 import pool from '../config/db.js';
 
 const seed = async () => {
-  await pool.query(`DELETE FROM action_logs`);
-  await pool.query(`DELETE FROM tests`);
-  await pool.query(`DELETE FROM available_tests`);
-  await pool.query(`DELETE FROM test_runners`);
+  await pool.query(`TRUNCATE TABLE action_logs, tests, available_tests, test_runners RESTART IDENTITY CASCADE`);
 
   await pool.query(`
     INSERT INTO test_runners (id, name, status, platform, last_heartbeat)
