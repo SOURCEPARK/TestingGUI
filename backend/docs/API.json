@@ -1,0 +1,241 @@
+{
+	"info": {
+		"_postman_id": "5ced215c-20e0-4c2a-b52f-7ae4ce553500",
+		"name": "SoucePark-test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39813945"
+	},
+	"item": [
+		{
+			"name": "test",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "test-runner",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test-runner",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test-runner"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "start",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test/start",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"start"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "available-test",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test/available-tests",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"available-tests"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test/delete/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"delete",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "test/1",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test/d1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"d1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test/d1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"d1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "runners",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test/e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2/runners",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2",
+						"runners"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "reload",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test/reload",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"reload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "last-reload",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test/last-reload",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"last-reload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "restart",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/test/d1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1/restart",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test",
+						"d1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1",
+						"restart"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
