@@ -5,11 +5,20 @@ services:
       - "3000:3000"
     depends_on:
       - db
+      - simpletestrunner
     env_file:
       - .env
     networks:
       - mynetwork
+    #volumes:
+    #  - ./SimpleTestRunner:/app/SimpleTestRunner
 
+  simpletestrunner:
+    build: ./testRunner
+    expose:
+      - "8082"
+    networks:
+      - mynetwork
   db:
     image: postgres:17.5
     environment:

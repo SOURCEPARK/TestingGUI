@@ -1,4 +1,5 @@
 import db from '../config/db.js';
+import axios from 'axios';
 
 let lastReloadTimestamp = new Date().toISOString();
 
@@ -47,31 +48,26 @@ export const startTest = async (req, res) => {
   }
 
   try {
-    const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [testId]);
-    const runnerResult = await db.query('SELECT * FROM test_runners WHERE id = $1', [testRunnerId]);
+    //get test descriptor from GitHub
+    //const descriptorUrl = `https://github.com/SOURCEPARK/TestPlans.git`; //TODO: Where are the descriptors?
+    //const descriptorRes = await fetch(descriptorUrl);
+    //if (!descriptorRes.ok) {
+    //  return res.status(404).json(`Test descriptor ${testId} not found on GitHub`);
+    //}
+    //const testDescriptor = await descriptorRes.json();
 
-    if (testResult.rows.length === 0) {
-      return res.status(404).json(`Test ${testId} not found.`);
-    }
-    if (runnerResult.rows.length === 0) {
-      return res.status(404).json(`Runner ${testRunnerId} not found.`);
-    }
+    const response = await axios.post('http://simpletestrunner:8082/test', {
+      testId: req.body.testId,
+      testRunnerId: req.body.testRunnerId,
+    });
 
-    const runner = runnerResult.rows[0];
-    if (runner.status === 'RUNNING') {
-      return res.status(409).json( `${runner.name} is busy.`);
-    }
-    if (runner.status === 'ERROR') {
-      return res.status(409).json(`${runner.name} is not available.`);
-    }
-
-    await db.query('UPDATE tests SET status = $1, test_runner_id = $2 WHERE id = $3', ['RUNNING', testRunnerId, testId]);
-    await db.query('UPDATE test_runners SET status = $1 WHERE id = $2', ['RUNNING', testRunnerId]);
-
-    res.status(200).json(`Test ${testId} started with runner ${testRunnerId}`);
+    return res.status(200).json({ 
+      message: 'SimpleTestRunner Server started',
+      simpleTestRunnerResponse: response.data,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json("Database error");
+    console.error('Failed to start the server:', error);
+    return res.status(500).json({ error: 'Failed to start the server' });
   }
 };
 
