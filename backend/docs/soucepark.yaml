@@ -1,0 +1,63 @@
+type: collection
+name: SoucePark-test
+version: 1
+children:
+  - type: http-request
+    name: test
+    method: GET
+    url: http://localhost:3000/test?page=1&limit=10
+  - type: http-request
+    name: start
+    method: POST
+    url: http://localhost:3000/test/start
+    body:
+      mode: json
+      raw: |
+        {
+            "testId": "e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2",
+            "testRunnerId": "11111111-1111-1111-1111-111111111111"
+        }
+  - type: http-request
+    name: available-test
+    method: GET
+    url: http://localhost:3000/test/available-tests
+  - type: http-request
+    name: delete
+    method: DELETE
+    url: http://localhost:3000/test/d1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1
+  - type: http-request
+    name: test/1
+    method: GET
+    url: http://localhost:3000/test/e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2
+  - type: http-request
+    name: status
+    method: GET
+    url: http://localhost:3000/test/e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2/status
+  - type: http-request
+    name: available-runners
+    method: GET
+    url: http://localhost:3000/test/e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2/runners
+  - type: http-request
+    name: reload
+    method: POST
+    url: http://localhost:3000/test/reload
+  - type: http-request
+    name: last-reload
+    method: GET
+    url: http://localhost:3000/test/last-reload
+  - type: http-request
+    name: restart
+    method: POST
+    url: http://localhost:3000/test/e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2/restart
+  - type: http-request
+    name: testRunner
+    method: GET
+    url: http://localhost:3000/test-runner
+  - type: http-request
+    name: testRunner/1
+    method: GET
+    url: http://localhost:3000/test-runner/11111111-1111-1111-1111-111111111111
+  - type: http-request
+    name: hearbeat
+    method: POST
+    url: http://localhost:3000/test-runner/11111111-1111-1111-1111-111111111111/heartbeat
