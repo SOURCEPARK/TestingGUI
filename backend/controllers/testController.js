@@ -3,6 +3,7 @@ import axios from 'axios';
 
 let lastReloadTimestamp = new Date().toISOString();
 
+//GET paginated list of tests
 export const getTests = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -24,6 +25,7 @@ export const getTests = async (req, res) => {
   }
 };
 
+//GET detailed test information
 export const getTestById = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json( "Missing test ID.");
@@ -31,7 +33,7 @@ export const getTestById = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
     if (result.rows.length > 0) {
-      res.status(200).json(result.rows[0]);
+      res.status(200).json(result.rows);
     } else {
       res.status(404).json("Test not found");
     }
@@ -41,6 +43,7 @@ export const getTestById = async (req, res) => {
   }
 };
 
+//POST start a test
 export const startTest = async (req, res) => {
   const { testId, testRunnerId } = req.body;
   if (!testId || !testRunnerId) {
@@ -56,10 +59,24 @@ export const startTest = async (req, res) => {
     //}
     //const testDescriptor = await descriptorRes.json();
 
+    // TODO:Check if the test is available
+    const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [testId]);
+    if (testResult.rows.length === 0) {
+      return res.status(404).json("Test not found in available tests.");
+    }
+
+    // Call SimpleTestRunner to start the test
     const response = await axios.post('http://simpletestrunner:8082/test', {
       testId: req.body.testId,
       testRunnerId: req.body.testRunnerId,
     });
+
+    // Change test status to 'Running'
+    await db.query(`
+      UPDATE tests 
+      SET status = 'Running', test_runner_id = $1, start_time = $2, elapsed_seconds = 0
+      WHERE id = $3 RETURNING *
+    `, [testRunnerId, new Date().toISOString(), testId]);
 
     return res.status(200).json({ 
       message: 'SimpleTestRunner Server started',
@@ -71,26 +88,30 @@ export const startTest = async (req, res) => {
   }
 };
 
+//DELETE a test
 export const deleteTest = async (req, res) => {
   const { id } = req.params;
-  if (!id) return res.status(400).json(createActionResponse(400, "Missing test ID."));
+  if (!id) return res.status(400).json("Missing test ID.");
 
   try {
     const result = await db.query('DELETE FROM tests WHERE id = $1 RETURNING *', [id]);
     if (result.rows.length > 0) {
-      res.status(200).json(createActionResponse(200, `Test ${id} deleted.`));
+      res.status(200).json(`Test ${id} deleted.`);
     } else {
       res.status(404).json("Test not found");
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json(createActionResponse(500, "Database error"));
+    res.status(500).json("Database error");
   }
 };
 
+//POST restart a test
 export const restartTest = async (req, res) => {
   const { id } = req.params;
-  if (!id) return res.status(400).json("Missing test ID.");
+  if (!id) {
+    return res.status(400).json("Missing testId.");
+  }
 
   try {
     const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
@@ -98,28 +119,46 @@ export const restartTest = async (req, res) => {
       return res.status(404).json("Test not found");
     }
 
+    // Change test status to 'Pending' and reset progress
     await db.query(`
-      UPDATE tests SET status = 'Pending', progress = 0, start_time = NULL, elapsed_seconds = 0
-      WHERE id = $1
-    `, [id]);
+      UPDATE tests SET status = 'Pending', progress = 0, start_time = $1, elapsed_seconds = 0
+      WHERE id = $2
+    `, [new Date().toISOString(), id]);
 
-    console.log(`Test ${id} restart requested.`);
-    res.status(200).json(`Test ${id} is restarting.`);
+    const testRunnerId = testResult.test_runner_id;
+    console.log(`Restarting test ${id} with runner ${testRunnerId}`);
+
+    const response = await axios.post('http://simpletestrunner:8082/test', {
+      testId: id,
+      testRunnerId: testRunnerId,
+    });
+
+    // Change test status to 'Running'
+    await db.query(`
+      UPDATE tests 
+      SET status = 'Running', test_runner_id = $1, start_time = $2, elapsed_seconds = 0
+      WHERE id = $3 RETURNING *
+    `, [testRunnerId, new Date().toISOString(), id]);
+
+    return res.status(200).json({ 
+      message: 'SimpleTestRunner Server started',
+      simpleTestRunnerResponse: response.data,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json("Database error");
   }
 };
 
+//GET test status
 export const getTestStatus = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing test ID.");
 
   try {
-    const result = await db.query('SELECT status, progress FROM tests WHERE id = $1', [id]);
+    const result = await db.query('SELECT id, status, progress FROM tests WHERE id = $1', [id]);
     if (result.rows.length > 0) {
-      const { status, progress } = result.rows[0];
-      res.status(200).json(`Status of test ${id}: ${status}, Progress: ${progress}%`);
+      res.status(200).json(result.rows);
     } else {
       res.status(404).json("Test not found");
     }
@@ -129,6 +168,7 @@ export const getTestStatus = async (req, res) => {
   }
 };
 
+//GET list of available tests
 export const getAvailableTests = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM available_tests');
@@ -139,6 +179,7 @@ export const getAvailableTests = async (req, res) => {
   }
 };
 
+//GET list of available test runners
 export const getAvailableRunners = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing test ID.");
@@ -156,7 +197,10 @@ export const getAvailableRunners = async (req, res) => {
     if (runnerResult.rows.length === 0) {
       return res.status(404).json(`No available runners for test ${id}`);
     }else {
-      res.status(200).json(`Available runners for test ${id}:`, runnerResult.rows);
+      res.status(200).json({
+        message: `Available runners for test ${id}:`,
+        runners: runnerResult.rows
+      });
     }
   } catch (err) {
     console.error(err);
@@ -164,12 +208,14 @@ export const getAvailableRunners = async (req, res) => {
   }
 };
 
+//POST reload tests from GitHub
 export const reloadTests = (req, res) => {
   console.log("Test reload from GitHub.");
   // TODO: git pull / fetch logic
   res.status(200).json(`Test plans reloaded. Last reload: ${lastReloadTimestamp}`);
 };
 
+//GET last reload timestamp
 export const getLastReload = async (req, res) => {
   const result = await db.query('SELECT id, name, last_reload FROM tests');
   res.status(200).json(result.rows);

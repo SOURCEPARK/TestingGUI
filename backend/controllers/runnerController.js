@@ -1,5 +1,6 @@
 import db from '../config/db.js';
 
+//GET paginated list of test runners
 export const getAllRunners = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -24,6 +25,7 @@ export const getAllRunners = async (req, res) => {
   }
 };
 
+//GET detailed test runner information
 export const getRunnerById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -40,6 +42,7 @@ export const getRunnerById = async (req, res) => {
   }
 };
 
+//POST heartbeat to runner
 export const sendHeartbeat = async (req, res) => {
   const { id } = req.params;
   try {
