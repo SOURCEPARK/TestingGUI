@@ -217,6 +217,6 @@ export const reloadTests = (req, res) => {
 
 //GET last reload timestamp
 export const getLastReload = async (req, res) => {
-  const result = await db.query('SELECT id, name, last_reload FROM tests');
+  const result = await db.query('SELECT DISTINCT last_reload FROM tests');
   res.status(200).json(result.rows);
 };

@@ -52,7 +52,7 @@ export const sendHeartbeat = async (req, res) => {
       return res.status(404).json("Test runner not found");
     }
 
-    const runner = result.rows[0];
+    const runner = result.rows;
     const now = new Date();
     const heartbeatTimestamp = Date.now();
     const newStatus = runner.status === 'RUNNING' ? 'RUNNING' : 'IDLE';
