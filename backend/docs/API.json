@@ -1,9 +1,10 @@
 {
 	"info": {
-		"_postman_id": "5ced215c-20e0-4c2a-b52f-7ae4ce553500",
+		"_postman_id": "792b5ba8-1f86-455b-b435-85b96f8b847f",
 		"name": "SoucePark-test",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "39813945"
+		"_exporter_id": "34249716",
+		"_collection_link": "https://backend-6685.postman.co/workspace/Sourcepark~dd80756f-ce55-43aa-9b12-e7009fdf4fd6/collection/34249716-792b5ba8-1f86-455b-b435-85b96f8b847f?action=share&source=collection_link&creator=34249716"
 	},
 	"item": [
 		{
@@ -110,7 +111,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3000/test/e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2",
+					"raw": "http://localhost:3000/test/f3f3f3f3-f3f3-4f3f-f3f3-f3f3f3f3f3f3",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -118,7 +119,7 @@
 					"port": "3000",
 					"path": [
 						"test",
-						"e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2"
+						"f3f3f3f3-f3f3-4f3f-f3f3-f3f3f3f3f3f3"
 					]
 				}
 			},
@@ -231,6 +232,66 @@
 						"test",
 						"e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2",
 						"restart"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Heartbeat",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test-runner/11111111-1111-1111-1111-111111111111/heartbeat",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test-runner",
+						"11111111-1111-1111-1111-111111111111",
+						"heartbeat"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Testrunner All",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test-runner",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test-runner"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Testrunner Single",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/test-runner/11111111-1111-1111-1111-111111111111",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"test-runner",
+						"11111111-1111-1111-1111-111111111111"
 					]
 				}
 			},

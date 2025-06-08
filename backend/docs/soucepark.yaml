@@ -30,6 +30,14 @@ children:
     method: GET
     url: http://localhost:3000/test/e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2
   - type: http-request
+    name: test/2
+    method: GET
+    url: http://localhost:3000/test/f3f3f3f3-f3f3-4f3f-f3f3-f3f3f3f3f3f3
+  - type: http-request
+    name: test/3
+    method: GET
+    url: http://localhost:3000/test/d1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1
+  - type: http-request
     name: status
     method: GET
     url: http://localhost:3000/test/e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2/status
