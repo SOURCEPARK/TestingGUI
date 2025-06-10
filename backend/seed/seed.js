@@ -49,7 +49,7 @@ const seed = async () => {
     await pool.query(`
       INSERT INTO tests (
         id, name, status, progress, testrun_id, start_time, last_reload,
-        elapsed_seconds, error_code, error_text, report, description
+        elapsed_seconds, error_code, error_text, report, description, last_message
       ) VALUES
         (
           'd1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1',
@@ -58,7 +58,8 @@ const seed = async () => {
           now() - interval '2 minutes', now(), 120.0,
           NULL, NULL,
           'Login test passed. All steps successful.',
-          'Tests login on Chrome with valid credentials.'
+          'Tests login on Chrome with valid credentials.',
+          'last step completed'
         ),
         (
           'e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2',
@@ -66,7 +67,8 @@ const seed = async () => {
           65.5, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
           now() - interval '1 minute', now(), 60.0,
           NULL, NULL, NULL,
-          'Running performance test with simulated traffic.'
+          'Running performance test with simulated traffic.',
+          'first step completed'
         ),
         (
           'f3f3f3f3-f3f3-4f3f-f3f3-f3f3f3f3f3f3',
@@ -75,7 +77,8 @@ const seed = async () => {
           now() - interval '5 minutes', now(), 45.0,
           'UI404', 'Element not found: submit button',
           'Error occurred at step 3: Missing element',
-          'Verifies the visibility and flow of login form on Firefox.'
+          'Verifies the visibility and flow of login form on Firefox.',
+          '6th step completed'
         )
     `);
 

@@ -149,7 +149,7 @@ export const getTestStatus = async (req, res) => {
   if (!id) return res.status(400).json("Missing test ID.");
 
   try {
-    const result = await db.query('SELECT id, status, progress, message FROM tests WHERE id = $1', [id]);
+    const result = await db.query('SELECT id, status, progress, last_message FROM tests WHERE id = $1', [id]);
     if (result.rows.length > 0) {
       res.status(200).json(result.rows);
     } else {
