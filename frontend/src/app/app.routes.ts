@@ -12,7 +12,7 @@ import { TestrunnerListSerivce } from './core/features/testrunner/services/list.
 import { TestrunnerListResolver } from './core/features/testrunner/resolver/testrunner-list.resolver';
 import { TestrunnerDetailSerivce } from './core/features/testrunner/services/details.service';
 import { TestrunnerDetailResolver } from './core/features/testrunner/resolver/testrunner-details.resolver';
-import { TestStartSerivce } from './core/features/tests/services/start.service';
+import { TestStartService } from './core/features/tests/services/start.service';
 import { AvailableTestResolver } from './core/features/tests/resolver/start-available-test.resolver';
 
 export const routes: Routes = [
@@ -32,7 +32,7 @@ export const routes: Routes = [
     path: 'tests/start-test',
     component: StartComponent,
     title: 'Sourcepark | Start Test',
-    providers: [TestStartSerivce, AvailableTestResolver],
+    providers: [TestStartService, AvailableTestResolver],
     resolve: { availableTests: AvailableTestResolver },
   },
   {

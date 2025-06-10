@@ -183,6 +183,7 @@ export class ListComponent implements OnInit {
     this.testrunners.set(data);
   }
 
+  //TODO: to lower case checken
   getStatusIcon(status: string): IconDefinition {
     console.log(status);
     switch (status) {

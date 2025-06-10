@@ -305,6 +305,7 @@ export class TestsListComponent implements OnInit {
     return result || false;
   }
 
+  //TODO: to lower case checken
   getStatusIcon(status: string): IconDefinition {
     console.log('status', status);
     switch (status) {
