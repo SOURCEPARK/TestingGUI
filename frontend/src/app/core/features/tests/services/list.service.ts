@@ -9,19 +9,19 @@ export class TestListService {
   /** Gesamtliste aller Tests */
   getTests(): Observable<TestListElement[]> {
     return this.http
-      .get<TestApiResponse[]>('/test')
+      .get<TestApiResponse[]>('/api/test')
       .pipe(map((tests) => tests.map((t) => this.apiToElement(t))));
   }
 
   /** Einzelnen Teststatus (Heartbeat) abrufen */
   fetchStatus(id: string): Observable<PartialTestUpdate> {
-    return this.http.get<PartialTestUpdate[]>(`/test/${id}/status`).pipe(
+    return this.http.get<PartialTestUpdate[]>(`/api/test/${id}/status`).pipe(
       map((arr) => arr[0]) // das Backend liefert ein Array mit einem Objekt
     );
   }
 
   restartTest(id: string): Observable<void> {
-    return this.http.post<void>(`/test/${id}/restart`, {});
+    return this.http.post<void>(`/api/test/${id}/restart`, {});
   }
 
   /* --------------------- Mappings & Helfer --------------------- */
@@ -53,17 +53,17 @@ export class TestListService {
   }
 
   deleteTest(id: string): Observable<void> {
-    return this.http.delete<void>(`/test/${id}`);
+    return this.http.delete<void>(`/api/test/${id}`);
   }
 
   reloadTestPlans(): Observable<ReloadResponse> {
-    return this.http.post<ReloadResponse>('/test/reload', {});
+    return this.http.post<ReloadResponse>('/api/test/reload', {});
   }
 
   /** GET /test/last-reload */
   getLastReload(): Observable<string> {
     return this.http
-      .get<{ last_reload: string }[]>('/test/last-reload')
+      .get<{ last_reload: string }[]>('/api/test/last-reload')
       .pipe(map((arr) => arr[0]?.last_reload ?? ''));
   }
 }

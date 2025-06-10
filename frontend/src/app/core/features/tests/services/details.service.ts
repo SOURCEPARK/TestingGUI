@@ -7,7 +7,7 @@ export class TestDetailSerivce {
   private readonly http = inject(HttpClient);
 
   getTestDetails(id: string): Observable<testDetails> {
-    return this.http.get<any[]>(`/test/${id}`).pipe(
+    return this.http.get<any[]>(`/api/test/${id}`).pipe(
       tap(console.log), // zeigt das ganze Array in der Konsole
       map((dataArray) => {
         const data = dataArray[0]; // Nur das erste Element extrahieren

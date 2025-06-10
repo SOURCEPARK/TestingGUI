@@ -7,7 +7,7 @@ export class TestStartSerivce {
   private readonly http = inject(HttpClient);
 
   getAvailableTests(): Observable<availableTest[]> {
-    return this.http.get<any[]>('test/available-tests').pipe(
+    return this.http.get<any[]>('/api/test/available-tests').pipe(
       map((tests) =>
         tests.map((t) => ({
           id: t.id,

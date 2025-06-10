@@ -8,7 +8,7 @@ export class TestrunnerDetailSerivce {
   private readonly http = inject(HttpClient);
 
   getTestrunnerDetails(id: string) {
-    return this.http.get<testrunnerDetails>(`/test-runner/${id}`).pipe(
+    return this.http.get<testrunnerDetails>(`/api/test-runner/${id}`).pipe(
       tap(console.log), // zeigt alle Felder in der Konsole
       map((runner) => ({
         id: runner.id,

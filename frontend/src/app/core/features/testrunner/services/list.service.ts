@@ -7,7 +7,7 @@ export class TestrunnerListSerivce {
   private readonly http = inject(HttpClient);
 
   getTestrunners() {
-    return this.http.get<TestrunnerListResponse[]>('/test-runner').pipe(
+    return this.http.get<TestrunnerListResponse[]>('/api/test-runner').pipe(
       map((testsRunner) =>
         testsRunner.map((t) => ({
           id: t.id,
@@ -21,7 +21,7 @@ export class TestrunnerListSerivce {
   }
 
   triggerHeartbeat(id: string): Observable<void> {
-    return this.http.post<void>(`/test-runner/${id}/heartbeat`, {});
+    return this.http.post<void>(`/api/test-runner/${id}/heartbeat`, {});
   }
 
   private formatUnix(timestamp: string): string {
