@@ -7,7 +7,9 @@ const createSchema = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS available_tests (
       id UUID PRIMARY KEY,
-      name VARCHAR(255) NOT NULL
+      name VARCHAR(255) NOT NULL,
+      path TEXT,
+      description TEXT
     );
   `);
 
@@ -26,7 +28,8 @@ const createSchema = async () => {
       error_code TEXT,
       error_text TEXT,
       report TEXT,
-      description TEXT
+      description TEXT,
+      last_message TEXT
     );
   `);
 
