@@ -25,7 +25,7 @@ const seed = async () => {
           '11111111-1111-1111-1111-111111111111',
           'Runner-A',
           'IDLE',
-          ARRAY['linux', 'x86_64'],
+          ARRAY['vagrant', 'k8s'],
           EXTRACT(EPOCH FROM now())::BIGINT,
           'All good',
           now() - interval '10 minutes',
@@ -36,7 +36,7 @@ const seed = async () => {
           '22222222-2222-2222-2222-222222222222',
           'Runner-B',
           'RUNNING',
-          ARRAY['windows', 'x86'],
+          ARRAY['k8s', 'docker'],
           EXTRACT(EPOCH FROM now() - interval '30 seconds')::BIGINT,
           'Processing test',
           now() - interval '2 minutes',
@@ -53,7 +53,7 @@ const seed = async () => {
       ) VALUES
         (
           'd1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1',
-          'Login Functionality Test', 'COMPLETED',
+          'Login Functionality Test', 'Completed',
           100.0, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
           now() - interval '2 minutes', now(), 120.0,
           NULL, NULL,
@@ -63,7 +63,7 @@ const seed = async () => {
         ),
         (
           'e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2',
-          'API Load Test', 'RUNNING',
+          'API Load Test', 'Running',
           65.5, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
           now() - interval '1 minute', now(), 60.0,
           NULL, NULL, NULL,
@@ -72,7 +72,7 @@ const seed = async () => {
         ),
         (
           'f3f3f3f3-f3f3-4f3f-f3f3-f3f3f3f3f3f3',
-          'Frontend UI Test', 'FAILED',
+          'Frontend UI Test', 'Failed',
           20.0, 'cccccccc-cccc-cccc-cccc-cccccccccccc',
           now() - interval '5 minutes', now(), 45.0,
           'UI404', 'Element not found: submit button',

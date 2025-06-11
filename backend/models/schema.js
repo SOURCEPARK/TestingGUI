@@ -9,7 +9,8 @@ const createSchema = async () => {
       id UUID PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       path TEXT,
-      description TEXT
+      description TEXT,
+      platform TEXT
     );
   `);
 
@@ -29,7 +30,9 @@ const createSchema = async () => {
       error_text TEXT,
       report TEXT,
       description TEXT,
-      last_message TEXT
+      last_message TEXT,
+      path TEXT,
+      platform TEXT
     );
   `);
 
@@ -45,7 +48,8 @@ const createSchema = async () => {
       last_update TIMESTAMP,
       active_test UUID REFERENCES tests(id),
       elapsed_seconds FLOAT,
-      start_time TIMESTAMP
+      start_time TIMESTAMP,
+      url TEXT
     );
   `);
 

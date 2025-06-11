@@ -2,12 +2,10 @@ import db from '../config/db.js';
 import axios from 'axios';
 import {v4 as uuidv4 } from 'uuid';
 
-let lastReloadTimestamp = new Date().toISOString();
-
 //GET paginated list of tests
 export const getTests = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit) || 10000;
   const offset = (page - 1) * limit;
 
   try {
@@ -47,30 +45,49 @@ export const getTestById = async (req, res) => {
 // POST start a test
 export const startTest = async (req, res) => {
   const { testId, testRunnerId } = req.body;
+
   if (!testId || !testRunnerId) {
     return res.status(400).json("Missing testId or testRunnerId.");
   }
 
   try {
-    const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [testId]);
+    // Testdefinition aus available_tests holen
+    const testResult = await db.query('SELECT * FROM available_tests WHERE id = $1', [testId]);
     if (testResult.rows.length === 0) {
       return res.status(404).json("Test not found in available tests.");
     }
 
     const test = testResult.rows[0];
     const testPlanUrl = `https://github.com/SOURCEPARK/TestPlans.git#${test.path}`;
+    const testrunId = uuidv4();
 
+    // Testlauf beim Runner auslösen
     const response = await axios.post('http://simpletestrunner:8082/test', {
       testPlan: testPlanUrl
     });
 
+    // Neuen Eintrag in tests-Tabelle erzeugen
     await db.query(`
-      UPDATE tests 
-      SET status = 'Running', test_runner_id = $1, start_time = $2, elapsed_seconds = 0
-      WHERE id = $3
-    `, [testRunnerId, new Date().toISOString(), testId]);
+      INSERT INTO tests (
+        id, name, path, platform, description,
+        status, test_runner_id, start_time, elapsed_seconds,
+        progress, testrun_id
+      )
+      VALUES ($1, $2, $3, $4, $5,
+              'Running', $6, $7, 0,
+              0, $8)
+    `, [
+      test.id,
+      test.name,
+      test.path,
+      test.platform,
+      test.description,
+      testRunnerId,
+      new Date().toISOString(),
+      testrunId
+    ]);
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: 'Test started with test plan URL.',
       testPlan: testPlanUrl,
       simpleTestRunnerResponse: response.data
@@ -99,49 +116,79 @@ export const deleteTest = async (req, res) => {
   }
 };
 
-//POST restart a test
+// GET restart a test
 export const restartTest = async (req, res) => {
   const { id } = req.params;
   if (!id) {
-    return res.status(400).json("Missing testId.");
+    return res.status(400).json({
+      testRunId: null,
+      message: "Fehlende Test-ID",
+      errorcode: "400",
+      errortext: "Missing testId parameter"
+    });
   }
 
   try {
     const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
     if (testResult.rows.length === 0) {
-      return res.status(404).json("Test not found");
+      return res.status(404).json({
+        testRunId: null,
+        message: "Test nicht gefunden",
+        errorcode: "404",
+        errortext: "Test not found"
+      });
     }
 
-    // Change test status to 'Pending' and reset progress
-    await db.query(`
-      UPDATE tests SET status = 'Pending', progress = 0, start_time = $1, elapsed_seconds = 0
-      WHERE id = $2
-    `, [new Date().toISOString(), id]);
+    const test = testResult.rows[0];
+    const testRunnerId = test.test_runner_id;
+    const testrunId = uuidv4(); // neue Testlauf-ID
+    const now = new Date().toISOString();
 
-    const testRunnerId = testResult.test_runner_id;
-    console.log(`Restarting test ${id} with runner ${testRunnerId}`);
-
-    const response = await axios.post('http://simpletestrunner:8082/test', {
-      testId: id,
-      testRunnerId: testRunnerId,
-    });
-
-    // Change test status to 'Running'
+    // Test vorinitialisieren (Pending)
     await db.query(`
       UPDATE tests 
-      SET status = 'Running', test_runner_id = $1, start_time = $2, elapsed_seconds = 0
-      WHERE id = $3 RETURNING *
-    `, [testRunnerId, new Date().toISOString(), id]);
+      SET status = 'Pending', progress = 0, start_time = $1, elapsed_seconds = 0, testrun_id = $2
+      WHERE id = $3
+    `, [now, testrunId, id]);
 
-    return res.status(200).json({ 
-      message: 'SimpleTestRunner Server started',
-      simpleTestRunnerResponse: response.data,
+    // Anfrage an den Testrunner
+    const response = await axios.post('http://simpletestrunner:8082/test', {
+      testId: id,
+      testRunnerId
     });
+
+    if (response.status === 200) {
+      // Teststatus jetzt auf Running setzen
+      await db.query(`
+        UPDATE tests 
+        SET status = 'Running', start_time = $1
+        WHERE id = $2
+      `, [now, id]);
+
+      return res.status(200).json({
+        testRunId: testrunId,
+        message: "Test erfolgreich neu gestartet"
+      });
+    } else {
+      return res.status(500).json({
+        testRunId: testrunId,
+        message: "Teststart fehlgeschlagen",
+        errorcode: `${response.status}`,
+        errortext: response.statusText || "Unknown error"
+      });
+    }
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json("Database error");
+    console.error("Restart error:", error.message);
+    return res.status(500).json({
+      testRunId: null,
+      message: "Fehler beim Neustart",
+      errorcode: "500",
+      errortext: error.message
+    });
   }
 };
+
 
 //GET test status
 export const getTestStatus = async (req, res) => {
@@ -172,7 +219,7 @@ export const getAvailableTests = async (req, res) => {
   }
 };
 
-//GET list of available test runners
+//GET list of available test runners - soll prüfen welche Runner an verfügbar sind für die Plattform
 export const getAvailableRunners = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing test ID.");
@@ -247,6 +294,7 @@ export const reloadTests = async (req, res) => {
                         
                         try {
                             const testName = subfolder.name;
+                            const platform = folderName; // z. B. "k8s", "docker", "vagrant"
 
                             const existingTest = await db.query(
                                 'SELECT id FROM available_tests WHERE path = $1', 
@@ -255,13 +303,13 @@ export const reloadTests = async (req, res) => {
 
                             if (existingTest.rows.length > 0) {
                                 await db.query(
-                                  'UPDATE available_tests SET description = $1, name = $2 WHERE path = $3', 
-                                  [readmeContent, testName, folderPath]
+                                  'UPDATE available_tests SET description = $1, name = $2, platform = $3 WHERE path = $4', 
+                                  [readmeContent, testName, platform, folderPath]
                                 );
                             } else {
                                 await db.query(
-                                    'INSERT INTO available_tests (id, path, name, description) VALUES ($1, $2, $3, $4)', 
-                                    [uuidv4(), folderPath, testName, readmeContent]
+                                    'INSERT INTO available_tests (id, path, name, description, platform) VALUES ($1, $2, $3, $4, $5)', 
+                                    [uuidv4(), folderPath, testName, readmeContent, platform]
                                 );
                             }
                             successfulUpdates.push(folderPath);
