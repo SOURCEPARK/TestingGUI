@@ -117,6 +117,7 @@ export class StartComponent {
 
     effect(() => {
       const testId = selectedTestId();
+      console.log(testId);
       if (!testId) {
         this.forms.controls.testRunnersForm.disable();
         this.forms.controls.testRunnersForm.reset();

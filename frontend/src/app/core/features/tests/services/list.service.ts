@@ -30,7 +30,7 @@ export class TestListService {
       id: t.id,
       name: t.name,
       status: t.status,
-      testrunner: t.test_runner_id,
+      testRunner: t.testRunner,
       lastPing: this.formatUnix(t.lastHeartbeat),
 
       progress: t.progress,
@@ -73,7 +73,7 @@ export interface TestListElement {
   id: string;
   name: string;
   status: string;
-  testrunner: string;
+  testRunner: string;
   lastPing: string;
   progress: number;
 }
@@ -82,7 +82,7 @@ export interface TestApiResponse {
   id: string;
   name: string;
   status: string;
-  test_runner_id: string;
+  testRunner: string;
   progress: number;
   lastHeartbeat: string; // Unix-Millis oder ISO – wird via formatUnix behandelt
 }
