@@ -1,27 +1,10 @@
 import {
   Component,
   inject,
-  input,
   OnInit,
   signal,
   WritableSignal,
 } from '@angular/core';
-import {
-  faArrowLeft,
-  faArrowRight,
-  faFilter,
-  faMars,
-  faVenus,
-  faVenusMars,
-  faArrowUp,
-  faArrowDown,
-  faArrowsRotate,
-  faWavePulse,
-  faTrash,
-  faRabbitRunning,
-  faXmark,
-  faCircleCheck,
-} from '@fortawesome/pro-solid-svg-icons';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { TestListElement, TestListService } from '../../services/list.service';
@@ -312,22 +295,4 @@ export class TestsListComponent implements OnInit {
       minute: '2-digit',
     })}`;
   }
-
-  /* -------------- Icons -------------------- */
-  icons = {
-    filter: faFilter,
-    arrowRight: faArrowRight,
-    arrowLeft: faArrowLeft,
-    arrowUp: faArrowUp,
-    arrowDown: faArrowDown,
-    arrowsRotate: faArrowsRotate,
-    heartBeat: faWavePulse,
-    rabbitRunning: faRabbitRunning,
-    xMark: faXmark,
-    circleCheck: faCircleCheck,
-    trash: faTrash,
-    male: faMars,
-    female: faVenus,
-    diverse: faVenusMars,
-  };
 }

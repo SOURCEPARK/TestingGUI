@@ -1,11 +1,5 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import {
-  faDatabase,
-  faTasks,
-  faUserFriends,
-  faUserTie,
-} from '@fortawesome/pro-solid-svg-icons';
 
 @Component({
   selector: 'app-side-navigation',
@@ -62,11 +56,4 @@ import {
   `,
   styles: ``,
 })
-export class SideNavigationComponent {
-  icons = {
-    assignment: faTasks,
-    clients: faUserFriends,
-    employees: faUserTie,
-    masterData: faDatabase,
-  };
-}
+export class SideNavigationComponent {}
