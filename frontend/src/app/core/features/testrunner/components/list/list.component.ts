@@ -8,10 +8,6 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
-  FontAwesomeModule,
-  IconDefinition,
-} from '@fortawesome/angular-fontawesome';
-import {
   faArrowLeft,
   faArrowRight,
   faFilter,
@@ -39,7 +35,7 @@ import { NgClass } from '@angular/common';
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [RouterLink, FontAwesomeModule, NgClass],
+  imports: [RouterLink, NgClass],
   template: `
     <div id="testrunner-list" class="flex flex-col h-full px-4 sm:px-6 lg:px-8">
       <!-- Header -->
@@ -100,10 +96,6 @@ import { NgClass } from '@angular/common';
                     'text-green-600': testrunner.status !== 'sleeping'
                   }"
                 >
-                  <fa-icon
-                    [icon]="getStatusIcon(testrunner.status)"
-                    class="text-xs"
-                  />
                   {{ testrunner.status }}
                 </span>
               </td>
@@ -120,9 +112,7 @@ import { NgClass } from '@angular/common';
                 <button
                   class="text-orange-600 hover:text-orange-800"
                   (click)="onHeartbeatClicked($event, testrunner.id)"
-                >
-                  <fa-icon [icon]="icons.heartBeat" size="lg"></fa-icon>
-                </button>
+                ></button>
               </td>
             </tr>
             }
@@ -184,21 +174,6 @@ export class ListComponent implements OnInit {
   }
 
   //TODO: to lower case checken
-  getStatusIcon(status: string): IconDefinition {
-    console.log(status);
-    switch (status) {
-      case 'RUNNING':
-        return this.icons.rabbitRunning;
-      case 'SLEEPING':
-        return this.icons.faceSleeping;
-      case 'UNREACHABLE':
-        return this.icons.trash;
-      case 'IDLE':
-        return this.icons.sleeping;
-      default:
-        return this.icons.trash;
-    }
-  }
 
   /* ------------------------------------------------------------------ */
   /*                               Icons                                */

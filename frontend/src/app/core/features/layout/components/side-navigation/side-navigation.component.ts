@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
   faDatabase,
   faTasks,
@@ -10,7 +9,7 @@ import {
 
 @Component({
   selector: 'app-side-navigation',
-  imports: [FontAwesomeModule, RouterModule],
+  imports: [RouterModule],
   template: `
     <div class="flex bg-white h-full w-full">
       <div class="flex flex-col w-full">
@@ -39,7 +38,6 @@ import {
                       routerLinkActive="bg-gray-50 text-mhd border-l-4 border-mhd"
                       class="text-gray-700 hover:text-mhd hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold cursor-pointer"
                     >
-                      <fa-icon [icon]="icons.assignment" size="xl" />
                       Tests
                     </a>
                   </li>
@@ -50,7 +48,6 @@ import {
                       routerLinkActive="bg-gray-50 text-mhd border-l-4 border-mhd"
                       class="text-gray-700 hover:text-mhd hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold cursor-pointer"
                     >
-                      <fa-icon [icon]="icons.clients" size="xl" />
                       Testrunner
                     </a>
                   </li>

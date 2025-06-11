@@ -1,17 +1,11 @@
 import { Component } from '@angular/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { SideNavigationComponent } from '../side-navigation/side-navigation.component';
 import { LoginComponent } from '../login/login.component';
 import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-layout',
-  imports: [
-    FontAwesomeModule,
-    SideNavigationComponent,
-    LoginComponent,
-    RouterModule,
-  ],
+  imports: [SideNavigationComponent, LoginComponent, RouterModule],
   template: `
     <div class="flex w-full h-full relative">
       @if(loggedIn) {

@@ -2,12 +2,7 @@
 FROM node:20 AS builder
 WORKDIR /app
 
-# Auth-Token für privates NPM-Paket (z. B. Font Awesome Pro)
-ARG FONTAWESOME_NPM_AUTH_TOKEN
-ENV FONTAWESOME_NPM_AUTH_TOKEN=${FONTAWESOME_NPM_AUTH_TOKEN}
-
 # .npmrc MUSS mitkopiert werden (enthält ${…}-Platzhalter)
-COPY .npmrc ./
 COPY package*.json ./
 RUN npm ci --no-audit --prefer-offline
 

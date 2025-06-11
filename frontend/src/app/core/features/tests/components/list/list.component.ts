@@ -7,10 +7,6 @@ import {
   WritableSignal,
 } from '@angular/core';
 import {
-  FontAwesomeModule,
-  IconDefinition,
-} from '@fortawesome/angular-fontawesome';
-import {
   faArrowLeft,
   faArrowRight,
   faFilter,
@@ -36,7 +32,7 @@ import { ToastService } from '../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-list',
-  imports: [FontAwesomeModule, RouterLink, NgClass],
+  imports: [RouterLink, NgClass],
   template: `<div
     id="testrunner-list"
     class="flex flex-col h-full px-4 sm:px-6 lg:px-8"
@@ -123,7 +119,6 @@ import { ToastService } from '../../../shared/services/toast.service';
                   ' text-blue-600': test.status === 'Completed'
                 }"
               >
-                <fa-icon [icon]="getStatusIcon(test.status)" class="text-xs" />
                 {{ test.status }}
               </span>
             </td>
@@ -141,19 +136,19 @@ import { ToastService } from '../../../shared/services/toast.service';
                 class="text-orange-600 hover:text-orange-800"
                 (click)="onHeartbeatClicked($event, test.id)"
               >
-                <fa-icon [icon]="icons.heartBeat" size="lg"></fa-icon>
+                HB
               </button>
               <button
                 class="text-orange-600 hover:text-orange-800"
                 (click)="onRefreshClicked($event, test.id)"
               >
-                <fa-icon [icon]="icons.arrowsRotate" size="lg"></fa-icon>
+                RE
               </button>
               <button
                 class="text-orange-600 hover:text-orange-800"
                 (click)="onDeleteClicked($event, test.id)"
               >
-                <fa-icon [icon]="icons.xMark" size="lg"></fa-icon>
+                DEL
               </button>
             </td>
           </tr>
@@ -303,21 +298,6 @@ export class TestsListComponent implements OnInit {
     });
     const result = await firstValueFrom(ref.closed);
     return result || false;
-  }
-
-  //TODO: to lower case checken
-  getStatusIcon(status: string): IconDefinition {
-    console.log('status', status);
-    switch (status) {
-      case 'Running':
-        return this.icons.rabbitRunning;
-      case 'Failed':
-        return this.icons.xMark;
-      case 'Completed':
-        return this.icons.circleCheck;
-      default:
-        return this.icons.trash;
-    }
   }
 
   formatReloadTime(timestamp: string | null | undefined): string {
