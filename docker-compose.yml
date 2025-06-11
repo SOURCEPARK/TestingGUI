@@ -1,5 +1,3 @@
-#version: '3.8'
-
 services:
   backend:
     build: ./backend
@@ -7,8 +5,30 @@ services:
       - "3000:3000"
     depends_on:
       - db
+      - simpletestrunner
     env_file:
       - .env
+    networks:
+      - mynetwork
+    #volumes:
+    #  - ./SimpleTestRunner:/app/SimpleTestRunner
+
+  simpletestrunner:
+    build: ./testRunner
+    expose:
+      - "8082"
+    networks:
+      - mynetwork
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - FONTAWESOME_NPM_AUTH_TOKEN=${FONTAWESOME_NPM_AUTH_TOKEN}
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
     networks:
       - mynetwork
 
@@ -16,9 +36,9 @@ services:
     image: postgres:16
     container_name: postgres-db
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydb
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       #- pgdata:/var/lib/postgresql/data
       - ./db:/docker-entrypoint-initdb.d
@@ -26,10 +46,11 @@ services:
       - "5432:5432"
     networks:
       - mynetwork
+    ports:
+      - "5432:5432"
 
 volumes:
   pgdata:
 
 networks:
   mynetwork:
-
