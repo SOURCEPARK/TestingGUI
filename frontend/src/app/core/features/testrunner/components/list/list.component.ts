@@ -60,7 +60,7 @@ import { NgClass } from '@angular/common';
               <th
                 class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
               >
-                ID
+                Name
               </th>
               <th
                 class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
