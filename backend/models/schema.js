@@ -46,7 +46,7 @@ const createSchema = async () => {
       last_heartbeat BIGINT,
       last_feedback TEXT,
       last_update TIMESTAMP,
-      active_test UUID REFERENCES tests(id),
+      active_test UUID,
       elapsed_seconds FLOAT,
       start_time TIMESTAMP,
       url TEXT
@@ -55,10 +55,38 @@ const createSchema = async () => {
 
   // FK test_runner_id nachträglich hinzufügen
   await pool.query(`
-    ALTER TABLE tests
-    ADD CONSTRAINT fk_tests_test_runner
-    FOREIGN KEY (test_runner_id) REFERENCES test_runners(id);
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.table_constraints
+            WHERE constraint_name  = 'fk_tests_test_runner'
+        ) THEN
+            ALTER TABLE tests
+            ADD CONSTRAINT fk_tests_test_runner
+            FOREIGN KEY (test_runner_id) REFERENCES test_runners(id);
+        END IF;
+    END $$;
   `);
+
+  // FK active_test nachträglich hinzufügen
+  // Diese FK wird gesetzt, wenn ein Test gestartet wird und auf den aktiven Test des Runners verweist
+  // und wird auf NULL gesetzt, wenn der Test abgeschlossen ist
+  await pool.query(`
+  DO $$
+  BEGIN
+      IF NOT EXISTS (
+          SELECT 1
+          FROM information_schema.table_constraints
+          WHERE constraint_name = 'test_runners_active_test_fkey'
+      ) THEN
+          ALTER TABLE test_runners
+          ADD CONSTRAINT test_runners_active_test_fkey
+          FOREIGN KEY (active_test) REFERENCES tests(id) 
+          ON DELETE SET NULL;
+      END IF;
+  END $$;
+`);
 
   // action_logs
   await pool.query(`
