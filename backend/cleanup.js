@@ -7,7 +7,7 @@ export async function cleanupOldRunners(dbConn, thresholdMs = DEFAULT_THRESHOLD_
         dbConn = mod.default;
     }
     const cutoff = nowMs - thresholdMs;
-    await dbConn.query('DELETE FROM test_runners WHERE last_heartbeat < $1', [cutoff]);
+    await dbConn.query('   DELETE FROM test_runners    WHERE last_heartbeat < $1    AND id NOT IN (SELECT DISTINCT test_runner_id FROM tests WHERE test_runner_id IS NOT NULL)', [cutoff]);
 }
 
 export function startCleanupJob(dbConn, thresholdMs = DEFAULT_THRESHOLD_MS, intervalMs = DEFAULT_INTERVAL_MS) {
