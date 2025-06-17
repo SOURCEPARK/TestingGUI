@@ -84,7 +84,6 @@ export const getAvailableRunnerForAvailableTest = async (req, res) => {
   }
 };
 
-
 //GET Heartbeat aus DB ans Frontend senden
 export const getHeartbeat = async (req, res) => {
   const { id } = req.params;

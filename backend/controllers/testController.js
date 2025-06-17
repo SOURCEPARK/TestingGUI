@@ -250,102 +250,93 @@ export const getAvailableRunners = async (req, res) => {
 
 //POST reload tests from GitHub
 export const reloadTests = async (req, res) => {
-    console.log("Test reload from GitHub.");
+    console.log("Reloading test descriptors from GitHub.");
 
     try {
-        const baseUrl = 'https://api.github.com/repos/SOURCEPARK/TestPlans/contents';
+        const baseUrl = 'https://api.github.com/repos/SOURCEPARK/TestPlans/contents/descriptor';
         const headers = {
-          'Accept': 'application/vnd.github.v3+json',
-          'Authorization': `token ${process.env.GITHUB_TOKEN}`
+            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': `token ${process.env.GITHUB_TOKEN}`
         };
 
-        const targetFolders = ['k8s', 'vagrant', 'docker'];
+        const resDir = await axios.get(baseUrl, { headers });
+        const files = resDir.data;
+
         const successfulUpdates = [];
-        const failedFolders = [];
+        const failedDescriptors = [];
+        const foundIds = [];
 
-        for (const folderName of targetFolders) {
+        const jsonFiles = files.filter(file => file.name.endsWith('.json'));
+
+        for (const jsonFile of jsonFiles) {
             try {
-                // Prüfe ob Ordner existiert
-                const folderRes = await axios.get(`${baseUrl}/${folderName}`, { headers });
-                
-                // Unterordner verarbeiten
-                const subfolders = folderRes.data.filter(item => item.type === 'dir');
-                
-                if (subfolders.length === 0) {
-                    console.log(`No subfolders found in ${folderName}`);
-                    continue;
+                const jsonRes = await axios.get(jsonFile.download_url, { headers });
+                const descriptor = jsonRes.data;
+
+                const id = descriptor.testdescriptor?.id;
+                const name = descriptor.testdescriptor?.name;
+                const platforms = descriptor.testdescriptor?.platforms?.join(', ') || null;
+                const readmeFile = files.find(file => file.name === jsonFile.name.replace('.json', '.md'));
+
+                let description = '';
+                if (readmeFile) {
+                    const readmeRes = await axios.get(readmeFile.download_url, { headers });
+                    description = readmeRes.data;
                 }
 
-                for (const subfolder of subfolders) {
-                    try {
-                        const subfolderContent = await axios.get(subfolder.url, { headers });
-                        const readmeFile = subfolderContent.data.find(file => 
-                            file.name.toLowerCase().startsWith('readme') && 
-                            file.type === 'file'
-                        );
+                foundIds.push(id); // ID als gefunden markieren
 
-                        let readmeContent = '';
-                        if (readmeFile) {
-                            const readmeRes = await axios.get(readmeFile.download_url, { headers });
-                            readmeContent = readmeRes.data;
-                        }
+                const existingTest = await db.query(
+                    'SELECT id FROM available_tests WHERE id = $1',
+                    [id]
+                );
 
-                        const folderPath = `${folderName}/${subfolder.name}`;
-                        
-                        try {
-                            const testName = subfolder.name;
-                            const platform = folderName; // z. B. "k8s", "docker", "vagrant"
-
-                            const existingTest = await db.query(
-                                'SELECT id FROM available_tests WHERE path = $1', 
-                                [folderPath]
-                            );
-
-                            if (existingTest.rows.length > 0) {
-                                await db.query(
-                                  'UPDATE available_tests SET description = $1, name = $2, platform = $3 WHERE path = $4', 
-                                  [readmeContent, testName, platform, folderPath]
-                                );
-                            } else {
-                                await db.query(
-                                    'INSERT INTO available_tests (id, path, name, description, platform) VALUES ($1, $2, $3, $4, $5)', 
-                                    [uuidv4(), folderPath, testName, readmeContent, platform]
-                                );
-                            }
-                            successfulUpdates.push(folderPath);
-                        } catch (dbError) {
-                            console.error(`Database error for ${folderPath}:`, dbError.message);
-                            failedFolders.push(folderPath);
-                        }
-                    } catch (subfolderError) {
-                        console.error(`Error processing subfolder in ${folderName}:`, subfolderError.message);
-                        failedFolders.push(`${folderName}/*`);
-                    }
-                }
-            } catch (folderError) {
-                if (folderError.response?.status === 404) {
-                    console.log(`Folder ${folderName} does not exist in repository`);
+                if (existingTest.rows.length > 0) {
+                    await db.query(
+                        'UPDATE available_tests SET name = $1, platform = $2, description = $3, descriptor = $4 WHERE id = $5',
+                        [name, platforms, description, descriptor, id]
+                    );
                 } else {
-                    console.error(`Error accessing ${folderName}:`, folderError.message);
+                    await db.query(
+                        'INSERT INTO available_tests (id, name, platform, description, descriptor) VALUES ($1, $2, $3, $4, $5)',
+                        [id, name, platforms, description, descriptor]
+                    );
                 }
-                failedFolders.push(folderName);
+
+                successfulUpdates.push(name);
+            } catch (err) {
+                console.error(`Error processing ${jsonFile.name}:`, err.message);
+                failedDescriptors.push(jsonFile.name);
             }
         }
 
-        res.status(200).json({ 
+        // Alle IDs aus der DB holen
+        const dbTests = await db.query('SELECT id FROM available_tests');
+        const dbIds = dbTests.rows.map(row => row.id);
+
+        // IDs finden, die nicht mehr im GitHub vorhanden sind
+        const toDelete = dbIds.filter(id => !foundIds.includes(id));
+
+        // Löschen
+        for (const id of toDelete) {
+            await db.query('DELETE FROM available_tests WHERE id = $1', [id]);
+        }
+
+        res.status(200).json({
             success: true,
-            message: 'Test plans reload completed',
+            message: 'Descriptor reload completed',
             updated: successfulUpdates,
-            failed: failedFolders,
+            failed: failedDescriptors,
+            deleted: toDelete,
             timestamp: new Date()
         });
 
     } catch (err) {
         console.error('Critical error:', err.message);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            error: 'Failed to reload tests',
-            details: err.message 
+            error: 'Failed to reload descriptors',
+            details: err.message
         });
     }
 };

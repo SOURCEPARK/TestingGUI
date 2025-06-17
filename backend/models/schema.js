@@ -8,7 +8,7 @@ const createSchema = async () => {
     CREATE TABLE IF NOT EXISTS available_tests (
       id UUID PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
-      path TEXT,
+      descriptor TEXT,
       description TEXT,
       platform TEXT
     );

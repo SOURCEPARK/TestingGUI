@@ -5,13 +5,13 @@ const seed = async () => {
     await pool.query(`TRUNCATE TABLE action_logs, tests, available_tests, test_runners RESTART IDENTITY CASCADE`);
 
     // 1. available_tests einfügen
-    await pool.query(`
-      INSERT INTO available_tests (id, name, path, description)
-      VALUES
-        ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Login Functionality Test', '/k8s/TP', 'Test description'),
-        ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'API Load Test', '/k8s/TP', 'Test description'),
-        ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'Frontend UI Test', '/k8s/TP', 'Test description')
-    `);
+    // await pool.query(`
+    //   INSERT INTO available_tests (id, name, path, description)
+    //   VALUES
+    //     ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Login Functionality Test', '/k8s/TP', 'Test description'),
+    //     ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'API Load Test', '/k8s/TP', 'Test description'),
+    //     ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'Frontend UI Test', '/k8s/TP', 'Test description')
+    // `);
 
     // 2. test_runners ohne active_test
     await pool.query(`
