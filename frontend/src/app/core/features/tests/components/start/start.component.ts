@@ -1,4 +1,11 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { Location } from '@angular/common';
@@ -9,11 +16,13 @@ import {
 } from '../../services/start.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MarkdownModule } from 'ngx-markdown';
+import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
 
 @Component({
   selector: 'app-start',
   standalone: true,
-  imports: [NgSelectModule, ReactiveFormsModule],
+  imports: [NgSelectModule, ReactiveFormsModule, MarkdownPipe],
   template: `
     <form [formGroup]="forms" class="mx-auto max-w-7xl py-4 sm:px-6 lg:px-8">
       <div class="px-4 sm:px-0">
@@ -56,6 +65,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
                 notFoundText="Keine Einträge gefunden"
                 [clearable]="false"
               ></ng-select>
+            </dd>
+          </div>
+
+          <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+            <dt class="text-sm/6 font-medium text-gray-900">Beschreibung</dt>
+            <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+              <article
+                class="prose prose-sm max-w-none"
+                [innerHTML]="selectedTestDescription() || '' | markdown"
+              ></article>
             </dd>
           </div>
         </dl>
@@ -101,6 +120,17 @@ export class StartComponent {
     }),
   });
 
+  readonly selectedTestId = toSignal(
+    this.forms.controls.testDefinitionForm.valueChanges,
+    { initialValue: null }
+  );
+
+  readonly selectedTestDescription = computed(() => {
+    const testId = this.selectedTestId();
+    if (!testId) return null;
+    return this.availableTests().find((t) => t.id === testId)?.desc ?? null;
+  });
+
   constructor() {
     /* 1️⃣ Verfügbare Tests initial laden */
     this.svc.getAvailableTests().subscribe({
@@ -114,6 +144,12 @@ export class StartComponent {
       this.forms.controls.testDefinitionForm.valueChanges,
       { initialValue: null }
     );
+
+    this.selectedTestDescription = computed(() => {
+      const testId = selectedTestId();
+      if (!testId) return null;
+      return this.availableTests().find((t) => t.id === testId)?.desc ?? null;
+    });
 
     effect(() => {
       const testId = selectedTestId();
@@ -133,6 +169,13 @@ export class StartComponent {
         error: () =>
           this.toast.show('Fehler beim Laden der Testrunner', 'error'),
       });
+    });
+
+    // ⬇️ Beschreibung dynamisch abhängig vom ausgewählten Test
+    this.selectedTestDescription = computed(() => {
+      const testId = selectedTestId();
+      if (!testId) return null;
+      return this.availableTests().find((t) => t.id === testId)?.desc ?? null;
     });
   }
 

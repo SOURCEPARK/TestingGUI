@@ -94,9 +94,11 @@ import { NgClass } from '@angular/common';
 
               <td class="whitespace-nowrap px-3 py-4 text-sm flex gap-2">
                 <button
-                  class="text-orange-600 hover:text-orange-800"
+                  class="text-orange-600 hover:text-orange-800 w-6 h-6"
                   (click)="onHeartbeatClicked($event, testrunner.id)"
-                ></button>
+                >
+                  HB
+                </button>
               </td>
             </tr>
             }
@@ -135,6 +137,13 @@ export class ListComponent implements OnInit {
       | testrunnerListElement[]
       | undefined;
     this.testrunners.set(data ?? []);
+
+    // Set up an interval to reload testrunners every 30 seconds
+    setInterval(() => {
+      this.reloadTestrunners().catch((err) =>
+        console.error('Fehler beim Aktualisieren der Testrunner:', err)
+      );
+    }, 30000);
   }
 
   /* ------------------------------------------------------------------ */

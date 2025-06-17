@@ -204,7 +204,10 @@ export class TestsListComponent implements OnInit {
 
     const ok = await this.openConfirmDialog('Test wirklich neustarten?');
     console.log(ok);
-    if (!ok) return;
+
+    const returnValue = ok as any;
+    console.log('Dialog returned:', returnValue.confirmed);
+    if (returnValue.confirmed == false) return;
 
     try {
       this.toast.show('Test wird neu gestartet …', 'success');
@@ -237,7 +240,11 @@ export class TestsListComponent implements OnInit {
     e.stopPropagation();
 
     const ok = await this.openConfirmDialog('Test wirklich abbrechen/löschen?');
-    if (!ok) return;
+    console.log(ok);
+
+    const returnValue = ok as any;
+    console.log('Dialog returned:', returnValue.confirmed);
+    if (returnValue.confirmed == false) return;
 
     try {
       await firstValueFrom(this.svc.deleteTest(id));
@@ -274,12 +281,13 @@ export class TestsListComponent implements OnInit {
   }
 
   /* -------------- Helper ------------------- */
-  private async openConfirmDialog(text: string): Promise<boolean> {
+  private async openConfirmDialog(text: string) {
     const ref = this.dialog.open<boolean>(ConfirmComponent, {
       data: { confirmText: text },
       width: '400px',
     });
     const result = await firstValueFrom(ref.closed);
+    console.log('Dialog closed with:', result);
     return result || false;
   }
 

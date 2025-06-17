@@ -12,7 +12,14 @@ export class TestStartService {
       .get<any[]>('/api/test/available-tests')
       .pipe(
         map((tests) =>
-          tests.map((t) => ({ id: t.id, name: t.name } satisfies AvailableTest))
+          tests.map(
+            (t) =>
+              ({
+                id: t.id,
+                name: t.name,
+                desc: t.description,
+              } satisfies AvailableTest)
+          )
         )
       );
   }
@@ -41,6 +48,7 @@ export class TestStartService {
 export interface AvailableTest {
   id: string;
   name: string;
+  desc: string;
 }
 
 export interface TestRunner {

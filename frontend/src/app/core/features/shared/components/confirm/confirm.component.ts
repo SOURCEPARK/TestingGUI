@@ -41,6 +41,7 @@ export class ConfirmComponent {
   data = inject(DIALOG_DATA) as { confirmText: string };
 
   close(confirmed: boolean): void {
+    console.log('close called with:', confirmed);
     this.dialogRef.close({ confirmed });
   }
 }
