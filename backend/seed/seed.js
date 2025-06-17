@@ -30,7 +30,8 @@ const seed = async () => {
           'All good',
           now() - interval '10 minutes',
           0,
-          now() - interval '15 minutes'
+          now() - interval '15 minutes',
+          'http://simpletestrunner:8082'
         ),
         (
           '22222222-2222-2222-2222-222222222222',
@@ -41,7 +42,8 @@ const seed = async () => {
           'Processing test',
           now() - interval '2 minutes',
           123.45,
-          now() - interval '5 minutes'
+          now() - interval '5 minutes',
+          'http://simpletestrunner:8082'
         )
     `);
 
