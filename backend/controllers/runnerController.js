@@ -130,7 +130,7 @@ export const sendHeartbeat = async (req, res) => {
 
     try {
       // Anfrage an Testrunner senden
-      const response = await axios.get(`${runner.url}/health`);
+      const response = await axios.get(`${runner.url}/heartbeat`);
 
       if (response.status === 200) {
         await db.query(

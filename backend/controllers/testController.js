@@ -47,54 +47,98 @@ export const startTest = async (req, res) => {
   const { testId, testRunnerId } = req.body;
 
   if (!testId || !testRunnerId) {
-    return res.status(400).json("Missing testId or testRunnerId.");
+    return res.status(400).json({
+      testRunId: null,
+      message: "Fehlende Parameter",
+      errorcode: "400",
+      errortext: "Missing testId or testRunnerId."
+    });
   }
 
   try {
-    // Testdefinition aus available_tests holen
     const testResult = await db.query('SELECT * FROM available_tests WHERE id = $1', [testId]);
     if (testResult.rows.length === 0) {
-      return res.status(404).json("Test not found in available tests.");
+      return res.status(404).json({
+        testRunId: null,
+        message: "Test nicht gefunden",
+        errorcode: "404",
+        errortext: "Test not found in available tests."
+      });
     }
 
     const test = testResult.rows[0];
-    const testPlanUrl = `https://github.com/SOURCEPARK/TestPlans.git#${test.path}`;
-    const testrunId = uuidv4();
+    const descriptor = test.descriptor;
+    const testPlanUrl = descriptor?.testdescriptor?.testplan;
+    const platforms = descriptor?.testdescriptor?.platforms || [];
+    const testrunId = descriptor?.testdescriptor?.id;
 
-    // Testlauf beim Runner auslösen
-    const response = await axios.post('http://simpletestrunner:8082/test', {
-      testPlan: testPlanUrl
+    if (!testPlanUrl || platforms.length === 0 || !testrunId) {
+      return res.status(400).json({
+        testRunId: null,
+        message: "Ungültiger Descriptor",
+        errorcode: "400",
+        errortext: "Missing testplan, platforms or id in descriptor."
+      });
+    }
+
+    const runnerResult = await db.query(
+      'SELECT url FROM test_runners WHERE id = $1',
+      [testRunnerId]
+    );
+    if (runnerResult.rows.length === 0) {
+      return res.status(404).json({
+        testRunId: null,
+        message: "Testrunner nicht gefunden",
+        errorcode: "404",
+        errortext: "Test runner not found."
+      });
+    }
+
+    const runnerUrl = runnerResult.rows[0].url;
+
+    const response = await axios.post(`${runnerUrl}/start-test`, {
+      testDescription: descriptor,
+      testPlan: testPlanUrl,
+      platforms: platforms
     });
 
-    // Neuen Eintrag in tests-Tabelle erzeugen
+    await db.query(
+      'UPDATE test_runners SET status = $1, active_test = $2 WHERE id = $3',
+      ['RUNNING', test.id, testRunnerId]
+    );
+
     await db.query(`
       INSERT INTO tests (
         id, name, path, platform, description,
         status, test_runner_id, start_time, elapsed_seconds,
-        progress, testrun_id
+        progress, testrun_id, url
       )
       VALUES ($1, $2, $3, $4, $5,
               'Running', $6, $7, 0,
-              0, $8)
+              0, $1, $8)
     `, [
-      test.id,
+      testrunId,
       test.name,
       test.path,
       test.platform,
       test.description,
       testRunnerId,
       new Date().toISOString(),
-      testrunId
+      testPlanUrl
     ]);
 
     return res.status(200).json({
-      message: 'Test started with test plan URL.',
-      testPlan: testPlanUrl,
-      simpleTestRunnerResponse: response.data
+      testRunId: testrunId,
+      message: "Test erfolgreich gestartet"
     });
   } catch (error) {
-    console.error('Error during test start:', error);
-    return res.status(500).json({ error: 'Failed to start the server' });
+    console.error('Error during test start:', error.message);
+    return res.status(500).json({
+      testRunId: null,
+      message: "Interner Fehler beim Starten des Tests",
+      errorcode: "500",
+      errortext: error.message
+    });
   }
 };
 
@@ -105,13 +149,30 @@ export const deleteTest = async (req, res) => {
 
   try {
     const result = await db.query('DELETE FROM tests WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length > 0) {
-      res.status(200).json(`Test ${id} deleted.`);
-    } else {
-      res.status(404).json("Test not found");
+    if (result.rows.length === 0) {
+      return res.status(404).json("Test not found");
     }
+
+    const runnerResult = await db.query(
+      `SELECT url FROM test_runners WHERE active_test = $1`, [id]
+    );
+
+    if (runnerResult.rows.length === 0) {
+      return res.status(404).json("Test runner for this test not found");
+    }
+
+    const runnerUrl = runnerResult.rows[0].url;
+
+    try {
+      await axios.get(`${runnerUrl}/stop-test/${id}`);
+    } catch (stopErr) {
+      console.error("Fehler beim Stoppen des Tests:", stopErr.message);
+      return res.status(500).json("Test gelöscht, aber Fehler beim Stoppen.");
+    }
+
+    res.status(200).json(`Test ${id} gelöscht und gestoppt.`);
   } catch (err) {
-    console.error(err);
+    console.error("Database error:", err);
     res.status(500).json("Database error");
   }
 };
@@ -141,37 +202,42 @@ export const restartTest = async (req, res) => {
 
     const test = testResult.rows[0];
     const testRunnerId = test.test_runner_id;
-    const testrunId = uuidv4(); // neue Testlauf-ID
-    const now = new Date().toISOString();
 
-    // Test vorinitialisieren (Pending)
-    await db.query(`
-      UPDATE tests 
-      SET status = 'Pending', progress = 0, start_time = $1, elapsed_seconds = 0, testrun_id = $2
-      WHERE id = $3
-    `, [now, testrunId, id]);
+    const runnerResult = await db.query(
+      'SELECT url FROM test_runners WHERE id = $1',
+      [testRunnerId]
+    );
+    if (runnerResult.rows.length === 0) {
+      return res.status(404).json({
+        testRunId: id,
+        message: "Testrunner nicht gefunden",
+        errorcode: "404",
+        errortext: "Test runner not found"
+      });
+    }
 
-    // Anfrage an den Testrunner
-    const response = await axios.post('http://simpletestrunner:8082/test', {
-      testId: id,
-      testRunnerId
-    });
+    const runnerUrl = runnerResult.rows[0].url;
+
+    // Anfrage an den Testrunner nach API-Spec
+    const response = await axios.get(`${runnerUrl}/restart-test/${id}`);
 
     if (response.status === 200) {
-      // Teststatus jetzt auf Running setzen
+      const now = new Date().toISOString();
+
+      // Teststatus aktualisieren
       await db.query(`
         UPDATE tests 
-        SET status = 'Running', start_time = $1
+        SET status = 'Running', progress = 0, start_time = $1, elapsed_seconds = 0
         WHERE id = $2
       `, [now, id]);
 
       return res.status(200).json({
-        testRunId: testrunId,
+        testRunId: id,
         message: "Test erfolgreich neu gestartet"
       });
     } else {
       return res.status(500).json({
-        testRunId: testrunId,
+        testRunId: id,
         message: "Teststart fehlgeschlagen",
         errorcode: `${response.status}`,
         errortext: response.statusText || "Unknown error"
@@ -181,14 +247,13 @@ export const restartTest = async (req, res) => {
   } catch (error) {
     console.error("Restart error:", error.message);
     return res.status(500).json({
-      testRunId: null,
+      testRunId: id,
       message: "Fehler beim Neustart",
       errorcode: "500",
       errortext: error.message
     });
   }
 };
-
 
 //GET test status
 export const getTestStatus = async (req, res) => {
