@@ -10,8 +10,6 @@ services:
       - .env
     networks:
       - mynetwork
-    #volumes:
-    #  - ./SimpleTestRunner:/app/SimpleTestRunner
 
   simpletestrunner:
     build: ./testRunner

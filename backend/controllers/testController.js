@@ -67,7 +67,9 @@ export const startTest = async (req, res) => {
     }
 
     const test = testResult.rows[0];
-    const descriptor = test.descriptor;
+    const descriptorRaw = test.descriptor;
+    const descriptor = JSON.parse(descriptorRaw);
+    
     const testPlanUrl = descriptor?.testdescriptor?.testplan;
     const platforms = descriptor?.testdescriptor?.platforms || [];
     const testrunId = descriptor?.testdescriptor?.id;
@@ -95,6 +97,7 @@ export const startTest = async (req, res) => {
     }
 
     const runnerUrl = runnerResult.rows[0].url;
+    console.log("Runner URL:", runnerUrl);
 
     const response = await axios.post(`${runnerUrl}/start-test`, {
       testDescription: descriptor,
