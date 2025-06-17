@@ -21,7 +21,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         # Beispiel: Antwort auf POST-Anfrage
-        if self.path == "/test":
+        if self.path == "/start-test":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
 

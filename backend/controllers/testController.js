@@ -105,11 +105,6 @@ export const startTest = async (req, res) => {
       platforms: platforms
     });
 
-    await db.query(
-      'UPDATE test_runners SET status = $1, active_test = $2 WHERE id = $3',
-      ['RUNNING', test.id, testRunnerId]
-    );
-
     await db.query(`
       INSERT INTO tests (
         id, name, path, platform, description,
@@ -129,6 +124,11 @@ export const startTest = async (req, res) => {
       new Date().toISOString(),
       testPlanUrl
     ]);
+
+    await db.query(
+      'UPDATE test_runners SET status = $1, active_test = $2 WHERE id = $3',
+      ['RUNNING', test.id, testRunnerId]
+    );
 
     return res.status(200).json({
       testRunId: testrunId,
@@ -156,24 +156,23 @@ export const deleteTest = async (req, res) => {
       return res.status(404).json("Test not found");
     }
 
+    // Versuche, zugehörigen Runner zu finden (optional)
     const runnerResult = await db.query(
       `SELECT url FROM test_runners WHERE active_test = $1`, [id]
     );
 
-    if (runnerResult.rows.length === 0) {
-      return res.status(404).json("Test runner for this test not found");
+    if (runnerResult.rows.length > 0) {
+      const runnerUrl = runnerResult.rows[0].url;
+
+      try {
+        await axios.get(`${runnerUrl}/stop-test/${id}`);
+      } catch (stopErr) {
+        console.error("Fehler beim Stoppen des Tests:", stopErr.message);
+        return res.status(500).json("Test gelöscht, aber Fehler beim Stoppen.");
+      }
     }
 
-    const runnerUrl = runnerResult.rows[0].url;
-
-    try {
-      await axios.get(`${runnerUrl}/stop-test/${id}`);
-    } catch (stopErr) {
-      console.error("Fehler beim Stoppen des Tests:", stopErr.message);
-      return res.status(500).json("Test gelöscht, aber Fehler beim Stoppen.");
-    }
-
-    res.status(200).json(`Test ${id} gelöscht und gestoppt.`);
+    res.status(200).json(`Test ${id} gelöscht.`);
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json("Database error");

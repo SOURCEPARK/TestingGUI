@@ -32,7 +32,8 @@ const createSchema = async () => {
       description TEXT,
       last_message TEXT,
       path TEXT,
-      platform TEXT
+      platform TEXT,
+      url TEXT
     );
   `);
 

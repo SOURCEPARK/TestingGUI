@@ -18,7 +18,7 @@ const seed = async () => {
       INSERT INTO test_runners (
         id, name, status, platform, last_heartbeat,
         last_feedback, last_update,
-        elapsed_seconds, start_time
+        elapsed_seconds, start_time, url
       )
       VALUES 
         (
