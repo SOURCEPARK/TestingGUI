@@ -117,6 +117,8 @@ export const startTest = async (req, res) => {
       platforms: platforms
     });
 
+    console.log(`Test ${testId} started on runner ${testRunnerId}:`);
+
     await db.query(`
       INSERT INTO tests (
         id, name, path, platform, description,
@@ -160,32 +162,43 @@ export const startTest = async (req, res) => {
 //DELETE a test
 export const deleteTest = async (req, res) => {
   const { id } = req.params;
+  let runnerId, runnerUrl;
   if (!id) return res.status(400).json("Missing test ID.");
 
   try {
-    const result = await db.query('DELETE FROM tests WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json("Test not found");
-    }
-
     // Versuche, zugehörigen Runner zu finden (optional)
     const runnerResult = await db.query(
-      `SELECT url FROM test_runners WHERE active_test = $1`, [id]
+      `SELECT id, url FROM test_runners WHERE active_test = $1`, [id]
     );
 
+
     if (runnerResult.rows.length > 0) {
-      console.log("Stopping test on runner:", id);
-      const runnerUrl = runnerResult.rows[0].url;
+      console.log("Stopping test:", id);
+      runnerId = runnerResult.rows[0].id;
+      runnerUrl = runnerResult.rows[0].url;
 
       try {
         await axios.get(`${runnerUrl}/stop-test/${id}`);
       } catch (stopErr) {
         console.error("Fehler beim Stoppen des Tests:", stopErr.message);
-        return res.status(500).json("Test gelöscht, aber Fehler beim Stoppen.");
+        return res.status(500).json("Fehler beim Stoppen.");
       }
     }
 
-    res.status(200).json(`Test ${id} gelöscht.`);
+    // Successfully stop the test, now delete it from the database
+    const result = await db.query('DELETE FROM tests WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json("Test not found");
+    }
+
+    await db.query(
+      'UPDATE test_runners SET status = $1, active_test = NULL WHERE id = $2',
+      ['IDLE', runnerId]
+    );
+
+    console.log(`Test ${id} deleted successfully. Runner ${runnerId} is now available.`);
+
+    res.status(200).json(`Test ${id} gelöscht. Test runner ${runnerId} wieder verfügbar.`);
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json("Database error");
