@@ -256,6 +256,7 @@ export const registerRunner = async (req, res) => {
       [runnerId, runnerId, 'IDLE', platforms, url, now.toISOString()]
     );
 
+    console.log(`Runner ${runnerId} registered successfully.`);
     res.status(201).json(`Runner ${runnerId} registered or updated successfully.`);
   } catch (error) {
     console.error("Error registering runner:", error);

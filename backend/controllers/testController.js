@@ -112,7 +112,7 @@ export const startTest = async (req, res) => {
     console.log("Runner URL:", runnerUrl);
 
     const response = await axios.post(`${runnerUrl}/start-test`, {
-      testDescription: descriptor,
+      testDescription: testResult.rows[0].description,
       testPlan: testPlanUrl,
       platforms: platforms
     });

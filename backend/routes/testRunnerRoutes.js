@@ -12,7 +12,7 @@ router.get('/:id/heartbeat', runnerController.getHeartbeat);
 //POST runner registrieren sich
 router.post('/register', runnerController.registerRunner);
 //POST receive new heartbeat from runner
-router.post('/heartbeat', runnerController.sendHeartbeat);
+router.post('/heartbeat/:id', runnerController.sendHeartbeat);
 //GET available runners for test xyz mit platform x - which runners that are IDLE can run this platform and therefore the test
 router.get('/:id/available', runnerController.getAvailableRunnerForAvailableTest);
 
