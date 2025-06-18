@@ -66,6 +66,18 @@ export const startTest = async (req, res) => {
       });
     }
 
+    //Check if testRunnerId is valid and available
+    //TODO: If the test runner is not available, return an error or change the test status to "PENDING"?
+    const runnerCheck = await db.query('SELECT id FROM test_runners WHERE id = $1 AND status = $2', [testRunnerId, 'IDLE']);
+    if (runnerCheck.rows.length === 0) {
+      return res.status(400).json({
+        testRunId: null,
+        message: "Testrunner nicht verfügbar",
+        errorcode: "400",
+        errortext: "Test runner is not available."
+      });
+    }
+
     const test = testResult.rows[0];
     const descriptorRaw = test.descriptor;
     const descriptor = JSON.parse(descriptorRaw);
@@ -162,6 +174,7 @@ export const deleteTest = async (req, res) => {
     );
 
     if (runnerResult.rows.length > 0) {
+      console.log("Stopping test on runner:", id);
       const runnerUrl = runnerResult.rows[0].url;
 
       try {
