@@ -97,7 +97,20 @@ import { NgClass } from '@angular/common';
                   class="text-orange-600 hover:text-orange-800 w-6 h-6"
                   (click)="onHeartbeatClicked($event, testrunner.id)"
                 >
-                  HB
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3 13h2l3 6 4-12 3 6h4"
+                    />
+                  </svg>
                 </button>
               </td>
             </tr>

@@ -6,7 +6,7 @@ import {
   WritableSignal,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { NgClass } from '@angular/common';
+import { NgClass, NgIf } from '@angular/common';
 import { TestListElement, TestListService } from '../../services/list.service';
 import { Dialog } from '@angular/cdk/dialog';
 import { ConfirmComponent } from '../../../shared/components/confirm/confirm.component';
@@ -15,7 +15,7 @@ import { ToastService } from '../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-list',
-  imports: [RouterLink, NgClass],
+  imports: [RouterLink, NgClass, NgIf],
   template: `<div
     id="testrunner-list"
     class="flex flex-col h-full px-4 sm:px-6 lg:px-8"
@@ -36,8 +36,29 @@ import { ToastService } from '../../../shared/services/toast.service';
         <button
           id="new-client-button"
           (click)="onLoadTestDefinitionsClicked()"
-          class="cursor-pointer block rounded-md bg-mhd px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-mhd/80"
+          class="flex items-center gap-2 cursor-pointer rounded-md bg-mhd px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-mhd/80"
         >
+          <svg
+            *ngIf="isLoadingDefinitions()"
+            class="animate-spin h-5 w-5 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+            ></path>
+          </svg>
           Testpläne Laden
         </button>
         <button
@@ -118,20 +139,71 @@ import { ToastService } from '../../../shared/services/toast.service';
               <button
                 class="text-orange-600 hover:text-orange-800"
                 (click)="onHeartbeatClicked($event, test.id)"
+                aria-label="Heartbeat"
               >
-                HB
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 13h2l3 6 4-12 3 6h4"
+                  />
+                </svg>
               </button>
+
+              <!-- Restart (RE) – jetzt mit kreisenden Pfeilen -->
               <button
                 class="text-orange-600 hover:text-orange-800"
                 (click)="onRefreshClicked($event, test.id)"
+                aria-label="Restart"
               >
-                RE
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4.5 12a7.5 7.5 0 111.93 5.007"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4.5 16.5v-4h4"
+                  />
+                </svg>
               </button>
+
+              <!-- Delete (DEL) -->
               <button
                 class="text-orange-600 hover:text-orange-800"
                 (click)="onDeleteClicked($event, test.id)"
+                aria-label="Löschen"
               >
-                DEL
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               </button>
             </td>
           </tr>
@@ -163,6 +235,7 @@ export class TestsListComponent implements OnInit {
   }
 
   lastReload = signal<string>('');
+  isLoadingDefinitions = signal(false);
 
   private loadLastReload(): void {
     this.svc.getLastReload().subscribe({
@@ -260,6 +333,7 @@ export class TestsListComponent implements OnInit {
 
   onLoadTestDefinitionsClicked() {
     this.toast.show('Lade Testpläne …', 'info');
+    this.isLoadingDefinitions.set(true); // ➤ Spinner anzeigen
 
     this.svc.reloadTestPlans().subscribe({
       next: (res) => {
@@ -270,12 +344,14 @@ export class TestsListComponent implements OnInit {
           this.toast.show(`❌ Fehler bei: ${entry}`, 'error');
         });
 
-        // Aktualisiere lastReload mit timestamp aus der Antwort
         this.lastReload.set(res.timestamp);
       },
       error: (err) => {
         console.error('Fehler beim Testplan-Reload', err);
         this.toast.show('Fehler beim Testplan-Reload', 'error');
+      },
+      complete: () => {
+        this.isLoadingDefinitions.set(false); // ➤ Spinner wieder aus
       },
     });
   }
