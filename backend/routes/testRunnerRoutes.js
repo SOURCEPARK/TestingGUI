@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', runnerController.getAllRunners);
 //GET detailed test runner information
 router.get('/:id', runnerController.getRunnerById);
-//GET heartbeat to runner
+//GET heartbeat to frontend
 router.get('/:id/heartbeat', runnerController.getHeartbeat);
 //POST runner registrieren sich
 router.post('/register', runnerController.registerRunner);
