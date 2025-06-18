@@ -2,10 +2,11 @@ import { Component, input } from '@angular/core';
 import { testDetails } from '../../services/details.service';
 import { formatSeconds } from '../../../shared/services/time.service';
 import { NgClass } from '@angular/common';
+import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
 
 @Component({
   selector: 'app-detail',
-  imports: [NgClass],
+  imports: [NgClass, MarkdownPipe],
   template: `
     <div class="mx-auto max-w-7xl py-4 sm:px-6 lg:px-8">
       <div class="px-4 sm:px-0">
@@ -89,7 +90,10 @@ import { NgClass } from '@angular/common';
               Testbeschreibung
             </dt>
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-              {{ testDetailData().description }}
+              <article
+                class="prose prose-sm max-w-none"
+                [innerHTML]="testDetailData().description || '' | markdown"
+              ></article>
             </dd>
           </div>
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
