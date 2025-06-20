@@ -260,6 +260,16 @@ export const registerRunner = async (req, res) => {
       [runnerId, runnerId, 'IDLE', platforms, url, now.toISOString()]
     );
 
+    await db.query(
+      `UPDATE tests
+       SET status = 'Failed',
+           last_message = 'Runner restarted. Test status set to Failed.',
+           error_code = '500',
+           error_text = 'Runner was restarted during test execution.'
+       WHERE test_runner_id = $1 AND status = 'Running'`,
+      [runnerId]
+    );
+
     console.log(`Runner ${runnerId} registered successfully.`);
     res.status(201).json(`Runner ${runnerId} registered or updated successfully.`);
   } catch (error) {
