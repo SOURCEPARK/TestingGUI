@@ -177,6 +177,65 @@ export const sendHeartbeat = async (req, res) => {
   }
 };
 
+// POST empfängt die regelmäßigen Heartbeats von den Runnern
+export const receiveHeartbeat = async (req, res) => {
+  const { timestamp, runnerId, status, sequence, uptimeSeconds } = req.body;
+
+  if (!timestamp || !runnerId || !status || sequence === undefined) {
+    return res.status(400).json("Missing required heartbeat data");
+  }
+
+  const currentTs = new Date(timestamp).getTime();
+  if (!Number.isFinite(currentTs)) {
+    return res.status(400).json("Invalid timestamp.");
+  }
+
+  const safeUptime = Number.isFinite(uptimeSeconds) ? uptimeSeconds : 0;
+
+  try {
+    const result = await db.query('SELECT * FROM test_runners WHERE id = $1', [runnerId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json("Test runner not found");
+    }
+
+    const runner = result.rows[0];
+    const lastHeartbeat = runner.last_heartbeat || 0;
+
+    if (currentTs - lastHeartbeat < 60_000) {
+      return res.status(429).json(`Heartbeat too frequent. Wait ${60 - Math.floor((currentTs - lastHeartbeat) / 1000)}s.`);
+    }
+
+    await db.query(
+      `UPDATE test_runners
+       SET last_heartbeat = $1,
+           status = $2,
+           last_feedback = $3,
+           last_update = $4,
+           elapsed_seconds = $5
+       WHERE id = $6`,
+      [
+        currentTs,
+        status,
+        `Heartbeat #${sequence} received.`,
+        new Date().toISOString(),
+        safeUptime,
+        runnerId
+      ]
+    );
+
+    if (status === 'IDLE') {
+      await db.query(`UPDATE test_runners SET active_test = NULL WHERE id = $1`, [runnerId]);
+    }
+
+    console.log(`Heartbeat #${sequence} from runner ${runnerId} received.`);
+    res.status(200).json(`Heartbeat received for runner ${runnerId}.`);
+  } catch (error) {
+    console.error("Database error:", error);
+    res.status(500).json("Database error");
+  }
+};
+
 // POST register a new test runner
 export const registerRunner = async (req, res) => {
   const { runnerId, url, platforms } = req.body;
