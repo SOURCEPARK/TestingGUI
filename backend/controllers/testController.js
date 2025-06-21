@@ -381,6 +381,7 @@ export const reloadTests = async (req, res) => {
 
                 const id = descriptor.testdescriptor?.id;
                 const name = descriptor.testdescriptor?.name;
+                const lastReload = new Date().toISOString();
                 const platforms = descriptor.testdescriptor?.platforms?.join(', ') || null;
                 const readmeFile = files.find(file => file.name === jsonFile.name.replace('.json', '.md'));
 
@@ -399,13 +400,13 @@ export const reloadTests = async (req, res) => {
 
                 if (existingTest.rows.length > 0) {
                     await db.query(
-                        'UPDATE available_tests SET name = $1, platform = $2, description = $3, descriptor = $4 WHERE id = $5',
-                        [name, platforms, description, descriptor, id]
+                        'UPDATE available_tests SET name = $1, last_reload = $2, platform = $3, description = $4, descriptor = $5 WHERE id = $6',
+                        [name, lastReload, platforms, description, descriptor, id]
                     );
                 } else {
                     await db.query(
-                        'INSERT INTO available_tests (id, name, platform, description, descriptor) VALUES ($1, $2, $3, $4, $5)',
-                        [id, name, platforms, description, descriptor]
+                        'INSERT INTO available_tests (id, name, last_reload, platform, description, descriptor) VALUES ($1, $2, $3, $4, $5, $6)',
+                        [id, name, lastReload, platforms, description, descriptor]
                     );
                 }
 
@@ -449,6 +450,13 @@ export const reloadTests = async (req, res) => {
 
 //GET last reload timestamp
 export const getLastReload = async (req, res) => {
-  const result = await db.query('SELECT DISTINCT last_reload FROM tests');
-  res.status(200).json(result.rows);
+  const result = await db.query('SELECT DISTINCT last_reload FROM available_tests');
+  if (result.rows.length === 0) {
+    res.status(200).json({
+      last_reload: null,
+      message: "Not yet loaded."
+    });
+  } else {
+    res.status(200).json(result.rows[0]);
+  }
 };

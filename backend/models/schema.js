@@ -8,6 +8,7 @@ const createSchema = async () => {
     CREATE TABLE IF NOT EXISTS available_tests (
       id UUID PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
+      last_reload TIMESTAMP,
       descriptor TEXT,
       description TEXT,
       platform TEXT
@@ -24,7 +25,6 @@ const createSchema = async () => {
       progress FLOAT,
       testrun_id UUID,
       start_time TIMESTAMP,
-      last_reload TIMESTAMP,
       elapsed_seconds FLOAT,
       error_code TEXT,
       error_text TEXT,

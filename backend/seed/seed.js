@@ -50,14 +50,14 @@ const seed = async () => {
     // 3. tests ohne test_runner_id
     await pool.query(`
       INSERT INTO tests (
-        id, name, status, progress, testrun_id, start_time, last_reload,
+        id, name, status, progress, testrun_id, start_time,
         elapsed_seconds, error_code, error_text, report, description, last_message
       ) VALUES
         (
           'd1d1d1d1-d1d1-4d1d-d1d1-d1d1d1d1d1d1',
           'Login Functionality Test', 'Completed',
           100.0, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-          now() - interval '2 minutes', now(), 120.0,
+          now() - interval '2 minutes', 120.0,
           NULL, NULL,
           'Login test passed. All steps successful.',
           'Tests login on Chrome with valid credentials.',
@@ -67,7 +67,7 @@ const seed = async () => {
           'e2e2e2e2-e2e2-4e2e-e2e2-e2e2e2e2e2e2',
           'API Load Test', 'Running',
           65.5, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-          now() - interval '1 minute', now(), 60.0,
+          now() - interval '1 minute', 60.0,
           NULL, NULL, NULL,
           'Running performance test with simulated traffic.',
           'first step completed'
@@ -76,7 +76,7 @@ const seed = async () => {
           'f3f3f3f3-f3f3-4f3f-f3f3-f3f3f3f3f3f3',
           'Frontend UI Test', 'Failed',
           20.0, 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-          now() - interval '5 minutes', now(), 45.0,
+          now() - interval '5 minutes', 45.0,
           'UI404', 'Element not found: submit button',
           'Error occurred at step 3: Missing element',
           'Verifies the visibility and flow of login form on Firefox.',
