@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+import uuid
 
 # Definiere den Handler, der auf HTTP-Anfragen reagiert
 class SimpleRequestHandler(BaseHTTPRequestHandler):
@@ -37,7 +38,10 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             # Simuliere, dass wir die JSON-Daten empfangen und bearbeiten
             data = json.loads(post_data)
 
+            test_run_id = str(uuid.uuid4())
+
             response = {
+                "testRunId": test_run_id,
                 "received": data,
                 "status": "OK"
             }

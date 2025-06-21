@@ -52,7 +52,7 @@ export const getAvailableRunnerForAvailableTest = async (req, res) => {
   }
 
   try {
-    // Plattform des Tests holen
+    // Platform des Tests holen
     const testResult = await db.query(
       `SELECT platform FROM available_tests WHERE id = $1`,
       [testId]

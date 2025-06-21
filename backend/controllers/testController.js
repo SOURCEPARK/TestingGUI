@@ -10,7 +10,7 @@ export const getTests = async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT tests.id, tests.name, tests.status, tests.test_runner_id AS "testRunner", test_runners.last_heartbeat AS "lastHeartbeat", tests.progress
+      `SELECT tests.id, tests.test_plan_id AS "testPlanId", tests.testrun_id AS "testRunId", tests.name, tests.status, tests.test_runner_id AS "testRunner", test_runners.last_heartbeat AS "lastHeartbeat", tests.progress
         FROM tests
         LEFT JOIN test_runners ON tests.test_runner_id = test_runners.id
         ORDER BY tests.id
@@ -44,19 +44,19 @@ export const getTestById = async (req, res) => {
 
 // POST start a test
 export const startTest = async (req, res) => {
-  const { testId, testRunnerId } = req.body;
+  const { testPlanId, testRunnerId } = req.body;
 
-  if (!testId || !testRunnerId) {
+  if (!testPlanId || !testRunnerId) {
     return res.status(400).json({
       testRunId: null,
       message: "Fehlende Parameter",
       errorcode: "400",
-      errortext: "Missing testId or testRunnerId."
+      errortext: "Missing testPlanId or testRunnerId."
     });
   }
 
   try {
-    const testResult = await db.query('SELECT * FROM available_tests WHERE id = $1', [testId]);
+    const testResult = await db.query('SELECT * FROM available_tests WHERE id = $1', [testPlanId]);
     if (testResult.rows.length === 0) {
       return res.status(404).json({
         testRunId: null,
@@ -84,9 +84,9 @@ export const startTest = async (req, res) => {
     
     const testPlanUrl = descriptor?.testdescriptor?.testplan;
     const platforms = descriptor?.testdescriptor?.platforms || [];
-    const testrunId = descriptor?.testdescriptor?.id;
+  
 
-    if (!testPlanUrl || platforms.length === 0 || !testrunId) {
+    if (!testPlanUrl || platforms.length === 0 || !testPlanId) {
       return res.status(400).json({
         testRunId: null,
         message: "Ungültiger Descriptor",
@@ -117,36 +117,46 @@ export const startTest = async (req, res) => {
       platforms: platforms
     });
 
-    console.log(`Test ${testId} started on runner ${testRunnerId}:`);
+    const testRunId = response.data.testRunId;
+
+    console.log(`Test plan ${testPlanId} started on runner ${testRunnerId}, testRunId: ${testRunId}`);
 
     await db.query(`
       INSERT INTO tests (
-        id, name, path, platform, description,
+        id, name, platform, description,
         status, test_runner_id, start_time, elapsed_seconds,
-        progress, testrun_id, url
+        progress, testrun_id, url, test_plan_id
       )
-      VALUES ($1, $2, $3, $4, $5,
-              'Running', $6, $7, 0,
-              0, $1, $8)
+      VALUES ($1, $2, $3, $4, 
+              'Running', $5, $6, 0,
+              0, $7, $8, $9)
     `, [
-      testrunId,
+      uuidv4(),
       test.name,
-      test.path,
       test.platform,
       test.description,
       testRunnerId,
       new Date().toISOString(),
-      testPlanUrl
+      testRunId,
+      testPlanUrl,
+      testPlanId
     ]);
+
+    // Get the unique test ID after inserting the test
+    const testIdRaw = await db.query(
+      'SELECT id FROM tests WHERE test_plan_id = $1',
+      [test.id]
+    );
+    const testId = testIdRaw.rows[0].id;
 
     await db.query(
       'UPDATE test_runners SET status = $1, active_test = $2 WHERE id = $3',
-      ['RUNNING', test.id, testRunnerId]
+      ['RUNNING', testId, testRunnerId]
     );
 
     return res.status(200).json({
-      testRunId: testrunId,
-      message: "Test erfolgreich gestartet"
+      testRunId: testRunId,
+      message: `TestID: ${testId} erfolgreich gestartet mit testPlanID ${testPlanId} auf Runner ${testRunnerId}.`,
     });
   } catch (error) {
     console.error('Error during test start:', error.message);
@@ -207,18 +217,18 @@ export const deleteTest = async (req, res) => {
 
 // GET restart a test
 export const restartTest = async (req, res) => {
-  const { id } = req.params;
-  if (!id) {
+  const { testId } = req.params;
+  if (!testId) {
     return res.status(400).json({
-      testRunId: null,
-      message: "Fehlende Test-ID",
+      testId: null,
+      message: "Fehlende testId",
       errorcode: "400",
-      errortext: "Missing testId parameter"
+      errortext: "Missing testRunId parameter"
     });
   }
 
   try {
-    const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
+    const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [testId]);
     if (testResult.rows.length === 0) {
       return res.status(404).json({
         testRunId: null,
@@ -230,14 +240,17 @@ export const restartTest = async (req, res) => {
 
     const test = testResult.rows[0];
     const testRunnerId = test.test_runner_id;
+    const testRunId = test.testRunId;
 
     const runnerResult = await db.query(
       'SELECT url FROM test_runners WHERE id = $1',
       [testRunnerId]
     );
+
+    //TODO: maybe change to check the runner status instead of checking if it exists
     if (runnerResult.rows.length === 0) {
       return res.status(404).json({
-        testRunId: id,
+        testId: id,
         message: "Testrunner nicht gefunden",
         errorcode: "404",
         errortext: "Test runner not found"
@@ -247,7 +260,7 @@ export const restartTest = async (req, res) => {
     const runnerUrl = runnerResult.rows[0].url;
 
     // Anfrage an den Testrunner nach API-Spec
-    const response = await axios.get(`${runnerUrl}/restart-test/${id}`);
+    const response = await axios.get(`${runnerUrl}/restart-test/${testRunId}`);
 
     if (response.status === 200) {
       const now = new Date().toISOString();
@@ -260,12 +273,12 @@ export const restartTest = async (req, res) => {
       `, [now, id]);
 
       return res.status(200).json({
-        testRunId: id,
+        testId: id,
         message: "Test erfolgreich neu gestartet"
       });
     } else {
       return res.status(500).json({
-        testRunId: id,
+        testId: id,
         message: "Teststart fehlgeschlagen",
         errorcode: `${response.status}`,
         errortext: response.statusText || "Unknown error"

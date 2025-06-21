@@ -31,7 +31,7 @@ const createSchema = async () => {
       report TEXT,
       description TEXT,
       last_message TEXT,
-      path TEXT,
+      test_plan_id UUID,
       platform TEXT,
       url TEXT
     );
