@@ -44,7 +44,9 @@ export const getTestById = async (req, res) => {
 
 // POST start a test
 export const startTest = async (req, res) => {
-  const { testPlanId, testRunnerId } = req.body;
+  const { testId, testRunnerId } = req.body;
+
+  const testPlanId = testId
 
   if (!testPlanId || !testRunnerId) {
     return res.status(400).json({
