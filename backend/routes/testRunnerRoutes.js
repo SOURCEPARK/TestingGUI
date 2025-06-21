@@ -17,7 +17,7 @@ router.get('/:id/available', runnerController.getAvailableRunnerForAvailableTest
 //POST runner registrieren sich
 router.post('/register', runnerController.registerRunner);
 //POST hier werden die Heartbeats der Runner empfangen
-router.post('/heartbeat', runnerController.receiveHeartbeat);
+router.post('/heartbeat/:id', runnerController.receiveHeartbeat);
 //POST Heartbeat sendet Request für neuen heartbeat an den entsprechenden Runner
 router.post('/:id/heartbeat', runnerController.sendHeartbeat);
 
