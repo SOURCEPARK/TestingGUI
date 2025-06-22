@@ -217,20 +217,22 @@ export const deleteTest = async (req, res) => {
   }
 };
 
-// GET restart a test
+// POST restart a test by giving the test_plan_id, not the test id
 export const restartTest = async (req, res) => {
-  const { testId } = req.params;
-  if (!testId) {
+  const { id } = req.params;
+  if (!id) {
     return res.status(400).json({
       testId: null,
       message: "Fehlende testId",
       errorcode: "400",
-      errortext: "Missing testRunId parameter"
+      errortext: "Missing testId parameter"
     });
   }
 
+  const testId = id;
+
   try {
-    const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [testId]);
+    const testResult = await db.query('SELECT * FROM tests WHERE test_plan_id = $1', [testId]);
     if (testResult.rows.length === 0) {
       return res.status(404).json({
         testRunId: null,
