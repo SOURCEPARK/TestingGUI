@@ -29,6 +29,8 @@ export const getTestById = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json( "Missing test ID.");
 
+  //const testPlanId = id; 
+
   try {
     const result = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
     if (result.rows.length > 0) {
@@ -44,8 +46,8 @@ export const getTestById = async (req, res) => {
 
 // POST start a test
 export const startTest = async (req, res) => {
+  //testId is actually the test_plan_id, not the test id
   const { testId, testRunnerId } = req.body;
-
   const testPlanId = testId
 
   if (!testPlanId || !testRunnerId) {
@@ -93,7 +95,7 @@ export const startTest = async (req, res) => {
         testRunId: null,
         message: "Ungültiger Descriptor",
         errorcode: "400",
-        errortext: "Missing testplan, platforms or id in descriptor."
+        errortext: "Missing test plan, platforms or id in descriptor."
       });
     }
 
@@ -151,6 +153,7 @@ export const startTest = async (req, res) => {
     );
     const testId = testIdRaw.rows[0].id;
 
+    //active_test has the random test id, not the test plan id
     await db.query(
       'UPDATE test_runners SET status = $1, active_test = $2 WHERE id = $3',
       ['RUNNING', testId, testRunnerId]
@@ -173,6 +176,7 @@ export const startTest = async (req, res) => {
 
 //DELETE a test
 export const deleteTest = async (req, res) => {
+  //The id here is testId after checking in the GUI
   const { id } = req.params;
   let runnerId, runnerUrl;
   if (!id) return res.status(400).json("Missing test ID.");
@@ -183,14 +187,18 @@ export const deleteTest = async (req, res) => {
       `SELECT id, url FROM test_runners WHERE active_test = $1`, [id]
     );
 
+    const testResult = await db.query(
+      `SELECT test_plan_id FROM tests WHERE id = $1`, [id]
+    );
+    const testPlanId = testResult.rows[0]?.test_plan_id;
 
     if (runnerResult.rows.length > 0) {
-      console.log("Stopping test:", id);
+      console.log("Stopping test:", testPlanId);
       runnerId = runnerResult.rows[0].id;
       runnerUrl = runnerResult.rows[0].url;
 
       try {
-        await axios.get(`${runnerUrl}/stop-test/${id}`);
+        await axios.get(`${runnerUrl}/stop-test/${testPlanId}`);
       } catch (stopErr) {
         console.error("Fehler beim Stoppen des Tests:", stopErr.message);
         return res.status(500).json("Fehler beim Stoppen.");
@@ -198,7 +206,7 @@ export const deleteTest = async (req, res) => {
     }
 
     // Successfully stop the test, now delete it from the database
-    const result = await db.query('DELETE FROM tests WHERE id = $1 RETURNING *', [id]);
+    const result = await db.query('DELETE FROM tests WHERE test_plan_id = $1 RETURNING *', [testPlanId]);
     if (result.rows.length === 0) {
       return res.status(404).json("Test not found");
     }
@@ -208,9 +216,9 @@ export const deleteTest = async (req, res) => {
       ['IDLE', runnerId]
     );
 
-    console.log(`Test ${id} deleted successfully. Runner ${runnerId} is now available.`);
+    console.log(`Test ${testPlanId} deleted successfully. Runner ${runnerId} is now available.`);
 
-    res.status(200).json(`Test ${id} gelöscht. Test runner ${runnerId} wieder verfügbar.`);
+    res.status(200).json(`Test ${testPlanId} gelöscht. Test runner ${runnerId} wieder verfügbar.`);
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json("Database error");
@@ -219,23 +227,23 @@ export const deleteTest = async (req, res) => {
 
 // POST restart a test by giving the test_plan_id, not the test id
 export const restartTest = async (req, res) => {
+  //The id here is the test_id after checking in the GUI
   const { id } = req.params;
   if (!id) {
     return res.status(400).json({
-      testId: null,
+      testPlanId: null,
       message: "Fehlende testId",
       errorcode: "400",
       errortext: "Missing testId parameter"
     });
   }
 
-  const testId = id;
-
   try {
-    const testResult = await db.query('SELECT * FROM tests WHERE test_plan_id = $1', [testId]);
+    const testResult = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
     if (testResult.rows.length === 0) {
       return res.status(404).json({
         testRunId: null,
+        testId: id,
         message: "Test nicht gefunden",
         errorcode: "404",
         errortext: "Test not found"
@@ -245,6 +253,7 @@ export const restartTest = async (req, res) => {
     const test = testResult.rows[0];
     const testRunnerId = test.test_runner_id;
     const testRunId = test.testRunId;
+    const testPlanId = test.test_plan_id;
 
     const runnerResult = await db.query(
       'SELECT url FROM test_runners WHERE id = $1',
@@ -254,7 +263,7 @@ export const restartTest = async (req, res) => {
     //TODO: maybe change to check the runner status instead of checking if it exists
     if (runnerResult.rows.length === 0) {
       return res.status(404).json({
-        testId: id,
+        testPlanId: id,
         message: "Testrunner nicht gefunden",
         errorcode: "404",
         errortext: "Test runner not found"
@@ -262,6 +271,8 @@ export const restartTest = async (req, res) => {
     }
 
     const runnerUrl = runnerResult.rows[0].url;
+
+    console.log(`Restarting test ${testPlanId} on runner ${testRunnerId} with URL ${runnerUrl}`);
 
     // Anfrage an den Testrunner nach API-Spec
     const response = await axios.get(`${runnerUrl}/restart-test/${testRunId}`);
@@ -273,16 +284,17 @@ export const restartTest = async (req, res) => {
       await db.query(`
         UPDATE tests 
         SET status = 'Running', progress = 0, start_time = $1, elapsed_seconds = 0
-        WHERE id = $2
-      `, [now, id]);
+        WHERE test_plan_id = $2
+      `, [now, testPlanId]);
 
       return res.status(200).json({
-        testId: id,
-        message: "Test erfolgreich neu gestartet"
+        testPlanId: testPlanId,
+        message: response.data.message || "Test erfolgreich neu gestartet"
       });
     } else {
       return res.status(500).json({
-        testId: id,
+        testPlanId: id,
+        testRunId: testRunId,
         message: "Teststart fehlgeschlagen",
         errorcode: `${response.status}`,
         errortext: response.statusText || "Unknown error"
@@ -292,7 +304,8 @@ export const restartTest = async (req, res) => {
   } catch (error) {
     console.error("Restart error:", error.message);
     return res.status(500).json({
-      testRunId: id,
+      testPlanId: testPlanId,
+      testRunId: testRunId,
       message: "Fehler beim Neustart",
       errorcode: "500",
       errortext: error.message
@@ -302,11 +315,12 @@ export const restartTest = async (req, res) => {
 
 //GET test status
 export const getTestStatus = async (req, res) => {
+  //the id is the random test id, not the test plan id
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing test ID.");
 
   try {
-    const result = await db.query('SELECT id, status, progress, last_message FROM tests WHERE id = $1', [id]);
+    const result = await db.query('SELECT id, test_plan_id, status, progress, last_message FROM tests WHERE id = $1', [id]);
     if (result.rows.length > 0) {
       res.status(200).json(result.rows);
     } else {
@@ -332,12 +346,14 @@ export const getAvailableTests = async (req, res) => {
 //GET list of available test runners - soll prüfen welche Runner an verfügbar sind für die Plattform
 export const getAvailableRunners = async (req, res) => {
   const { id } = req.params;
-  if (!id) return res.status(400).json("Missing test ID.");
+  if (!id) return res.status(400).json("Missing test plan ID.");
+
+  const testPlanId = id;
 
   try {
-    const testResult = await db.query('SELECT id FROM tests WHERE id = $1', [id]);
+    const testResult = await db.query('SELECT id FROM tests WHERE test_plan_id = $1', [testPlanId]);
     if (testResult.rows.length === 0) {
-      return res.status(404).json("Test ID not found");
+      return res.status(404).json("Test Plan ID not found");
     }
 
     const runnerResult = await db.query(`

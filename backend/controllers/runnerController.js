@@ -106,7 +106,7 @@ export const getHeartbeat = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json("Test runner not found");
     }
-
+    
     res.status(200).json(result.rows[0]);
   } catch (error) {
     console.error("Error fetching heartbeat:", error);
@@ -131,6 +131,7 @@ export const sendHeartbeat = async (req, res) => {
     try {
       // Anfrage an Testrunner senden
       const response = await axios.get(`${runner.url}/heartbeat`);
+      const status = response.data.status || 'ERROR';
 
       if (response.status === 200) {
         await db.query(
@@ -142,15 +143,15 @@ export const sendHeartbeat = async (req, res) => {
            WHERE id = $5`,
           [
             Date.now(),
-            'RUNNING',
+            status,
             'Runner responded to health check.',
             now.toISOString(),
             id
           ]
         );
 
-        console.log(`Runner ${id} is alive.`);
-        return res.status(200).json(`Runner ${id} is alive.`);
+        console.log(`Runner ${id} is ${status}.`);
+        return res.status(200).json(`Runner ${id} is ${status}.`);
       }
     } catch (err) {
       // Runner nicht erreichbar
@@ -168,8 +169,9 @@ export const sendHeartbeat = async (req, res) => {
         ]
       );
 
-      console.warn(`Runner ${id} is not responding.`);
-      return res.status(503).json(`Runner ${id} is not responding.`);
+      console.error(`Runner ${id} is not responding:`, err.message, `Runner status set to ERROR.`);
+      //console.warn(`Runner ${id} is not responding.`);
+      return res.status(503).json(`Runner ${id} is not responding. Runner status set to ERROR.`);
     }
   } catch (error) {
     console.error("Database error:", error);

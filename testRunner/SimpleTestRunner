@@ -1,9 +1,22 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import uuid
+import time
+
+runner_state = {
+    "status": "IDLE",
+    "test_run_id": None,
+    "last_updated": time.time()
+}
 
 # Definiere den Handler, der auf HTTP-Anfragen reagiert
 class SimpleRequestHandler(BaseHTTPRequestHandler):
+
+    def _send_json(self, response_data, status_code=200):
+        self.send_response(status_code)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(response_data).encode('utf-8'))
 
     def do_GET(self):
         # Beispiel: Antwort auf GET-Anfrage
@@ -12,19 +25,41 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
                 "message": "Test ist gelungen!",
                 "status": "Jawohl Bruder"
             }
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode('utf-8'))
+            self._send_json(response)
+            
         elif self.path.startswith("/stop-test/"):
-            test_id = self.path.split("/stop-test/")[1]
+            test_plan_id = self.path.split("/stop-test/")[1]
+            runner_state["status"] = "IDLE"
+            runner_state["last_updated"] = time.time()
             response = {
-                "message": f"Test mit ID {test_id} wurde gestoppt."
+                "message": f"Test plan mit ID {test_plan_id} wurde gestoppt.",
+                "status": runner_state["status"]
             }
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode('utf-8'))
+
+            self._send_json(response)
+
+        elif self.path.startswith("/restart-test/"):
+            test_run_id = self.path.split("/restart-test/")[1]
+
+            runner_state["status"] = "IDLE"
+            runner_state["test_run_id"] = test_run_id
+            runner_state["last_updated"] = time.time()
+
+            response = {
+                "message": f"Test plan mit test run ID {test_run_id} wurde neu gestartet.",
+                "status": runner_state["status"]
+            }
+
+            self._send_json(response)
+
+        elif self.path.endswith("/heartbeat"):
+            response = {
+                "status": runner_state["status"],
+                "lastTestRunId": runner_state["test_run_id"],
+                "timestamp": runner_state["last_updated"]
+            }
+            self._send_json(response)
+        
         else:
             self.send_response(404)
             self.end_headers()
@@ -39,17 +74,18 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             data = json.loads(post_data)
 
             test_run_id = str(uuid.uuid4())
+            runner_state["status"] = "RUNNING"
+            runner_state["test_run_id"] = test_run_id
+            runner_state["last_updated"] = time.time()
 
             response = {
                 "testRunId": test_run_id,
                 "received": data,
-                "status": "OK"
+                "status": runner_state["status"]
             }
 
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode('utf-8'))
+            self._send_json(response)
+            
         else:
             self.send_response(404)
             self.end_headers()

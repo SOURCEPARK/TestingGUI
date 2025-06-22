@@ -83,7 +83,7 @@ const createSchema = async () => {
       ) THEN
           ALTER TABLE test_runners
           ADD CONSTRAINT test_runners_active_test_fkey
-          FOREIGN KEY (active_test) REFERENCES tests(id) 
+          FOREIGN KEY (active_test) REFERENCES tests(test_plan_id) 
           ON DELETE SET NULL;
       END IF;
   END $$;
