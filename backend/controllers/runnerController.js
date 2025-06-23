@@ -181,7 +181,7 @@ export const sendHeartbeat = async (req, res) => {
 
 // POST empfängt die regelmäßigen Heartbeats von den Runnern
 export const receiveHeartbeat = async (req, res) => {
-  const { timestamp, runnerId, status, sequence, uptimeSeconds } = req.body;
+  const { timestamp, runnerId, status, sequence, uptimeSeconds, testStatus, progress, message } = req.body;
 
   if (!timestamp || !runnerId || !status || sequence === undefined) {
     return res.status(400).json("Missing required heartbeat data");
@@ -277,5 +277,34 @@ export const registerRunner = async (req, res) => {
   } catch (error) {
     console.error("Error registering runner:", error);
     res.status(500).json("Failed to register runner.");
+  }
+};
+
+//POST completed erhalten und report speichern
+export const receiveCompleted = async (req, res) => {
+  const { report } = req.body;
+  const { testRunId } = req.params;
+
+  if (!report || !testRunId) {
+    return res.status(400).json("Fehlender report oder testRunId");
+  }
+
+  try {
+    const result = await db.query(
+      'UPDATE tests SET report = $1 WHERE testrun_id = $2 RETURNING id',
+      [report, testRunId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json("Testlauf nicht gefunden");
+    }
+
+    res.status(200).json({
+      message: `Report erfolgreich gespeichert für testRunId ${testRunId}`,
+      testId: result.rows[0].id
+    });
+  } catch (err) {
+    console.error("Fehler beim Speichern des Reports:", err.message);
+    res.status(500).json("Interner Serverfehler beim Speichern des Reports");
   }
 };

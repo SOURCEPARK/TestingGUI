@@ -20,5 +20,7 @@ router.post('/register', runnerController.registerRunner);
 router.post('/heartbeat/:id', runnerController.receiveHeartbeat);
 //POST Heartbeat sendet Request für neuen heartbeat an den entsprechenden Runner
 router.post('/:id/heartbeat', runnerController.sendHeartbeat);
+//POST runner senden Report hierhin, wenn Testlauf completed ist
+router.post('/:testRunId/complete', runnerController.receiveCompleted)
 
 export default router;
