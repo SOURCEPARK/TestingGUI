@@ -59,10 +59,33 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
                 "timestamp": runner_state["last_updated"]
             }
             self._send_json(response)
-        
+
+        elif self.path.startswith("/test-status/"):
+            test_run_id = self.path.split("/test-status/")[1]
+
+            if test_run_id != runner_state["test_run_id"]:
+                self.send_response(404)
+                self.end_headers()
+                return
+
+            response = {
+                "runnerId": "testrunner-01",
+                "testRunId": test_run_id,
+                "testName": "ExampleName",
+                "status": runner_state["status"],
+                "startTime": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(runner_state["last_updated"])),
+                "elapsedSeconds": int(time.time() - runner_state["last_updated"]),
+                "progress": 0.5,
+                "errorcode": "",
+                "errortext": "",
+                "message": "Test läuft"
+            }
+            self._send_json(response)
+     
         else:
             self.send_response(404)
             self.end_headers()
+        
 
     def do_POST(self):
         # Beispiel: Antwort auf POST-Anfrage
