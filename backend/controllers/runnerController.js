@@ -264,11 +264,11 @@ export const registerRunner = async (req, res) => {
 
     await db.query(
       `UPDATE tests
-       SET status = 'Failed',
+       SET status = 'FAILED',
            last_message = 'Runner restarted. Test status set to Failed.',
            error_code = '500',
            error_text = 'Runner was restarted during test execution.'
-       WHERE test_runner_id = $1 AND status = 'Running'`,
+       WHERE test_runner_id = $1 AND status = 'RUNNING'`,
       [runnerId]
     );
 
@@ -293,7 +293,7 @@ export const receiveCompleted = async (req, res) => {
     const result = await db.query(
       `
       UPDATE tests 
-      SET report = $1, status = 'COMPLETED', progress = 1 
+      SET report = $1, status = 'PASSED', progress = 1 
       WHERE testrun_id = $2 
       RETURNING id
       `,

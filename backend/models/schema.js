@@ -20,7 +20,7 @@ const createSchema = async () => {
     CREATE TABLE IF NOT EXISTS tests (
       id UUID PRIMARY KEY,                 -- Eindeutige ID für diesen konkreten Testlauf (nicht test_plan_id)
       name VARCHAR(255) NOT NULL,         -- Anzeigename des Tests (kommt aus available_tests)
-      status VARCHAR(50),                 -- Status des Testlaufs: z.B. "Running", "Completed", "Failed", ...
+      status VARCHAR(50),                 -- Status des Testlaufs: z.B. "RUNNING", "PASSED", "FAILED", ...
       test_runner_id UUID,                -- Verweis auf den Test Runner, der diesen Test ausführt (FK zur test_runners-Tabelle)
       progress FLOAT,                     -- Fortschritt des Testlaufs in Prozent (z.B. 0.0–100.0)
       testrun_id UUID,                    -- Laufzeit-ID für den Testlauf, kommt vom Testrunner bei Start (API-spezifisch)

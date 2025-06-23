@@ -132,7 +132,7 @@ export const startTest = async (req, res) => {
         progress, testrun_id, url, test_plan_id
       )
       VALUES ($1, $2, $3, $4, 
-              'Running', $5, $6, 0,
+              'RUNNING', $5, $6, 0,
               0, $7, $8, $9)
     `, [
       uuidv4(),
@@ -283,7 +283,7 @@ export const restartTest = async (req, res) => {
       // Teststatus aktualisieren
       await db.query(`
         UPDATE tests 
-        SET status = 'Running', progress = 0, start_time = $1, elapsed_seconds = 0
+        SET status = 'RUNNING', progress = 0, start_time = $1, elapsed_seconds = 0
         WHERE test_plan_id = $2
       `, [now, testPlanId]);
 
