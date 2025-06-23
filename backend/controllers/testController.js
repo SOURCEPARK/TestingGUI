@@ -188,17 +188,17 @@ export const deleteTest = async (req, res) => {
     );
 
     const testResult = await db.query(
-      `SELECT test_plan_id FROM tests WHERE id = $1`, [id]
+      `SELECT testrun_id FROM tests WHERE id = $1`, [id]
     );
-    const testPlanId = testResult.rows[0]?.test_plan_id;
+    const testRunId = testResult.rows[0]?.testrun_id;
 
     if (runnerResult.rows.length > 0) {
-      console.log("Stopping test:", testPlanId);
+      console.log("Stopping test:", testRunId);
       runnerId = runnerResult.rows[0].id;
       runnerUrl = runnerResult.rows[0].url;
 
       try {
-        await axios.get(`${runnerUrl}/stop-test/${testPlanId}`);
+        await axios.get(`${runnerUrl}/stop-test/${testRunId}`);
       } catch (stopErr) {
         console.error("Fehler beim Stoppen des Tests:", stopErr.message);
         return res.status(500).json("Fehler beim Stoppen.");
@@ -206,7 +206,7 @@ export const deleteTest = async (req, res) => {
     }
 
     // Successfully stop the test, now delete it from the database
-    const result = await db.query('DELETE FROM tests WHERE test_plan_id = $1 RETURNING *', [testPlanId]);
+    const result = await db.query('DELETE FROM tests WHERE testrun_id = $1 RETURNING *', [testRunId]);
     if (result.rows.length === 0) {
       return res.status(404).json("Test not found");
     }
@@ -216,9 +216,9 @@ export const deleteTest = async (req, res) => {
       ['IDLE', runnerId]
     );
 
-    console.log(`Test ${testPlanId} deleted successfully. Runner ${runnerId} is now available.`);
+    console.log(`Test ${testRunId} deleted successfully. Runner ${runnerId} is now available.`);
 
-    res.status(200).json(`Test ${testPlanId} gelöscht. Test runner ${runnerId} wieder verfügbar.`);
+    res.status(200).json(`Test ${testRunId} gelöscht. Test runner ${runnerId} wieder verfügbar.`);
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json("Database error");
