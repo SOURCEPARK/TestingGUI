@@ -291,7 +291,12 @@ export const receiveCompleted = async (req, res) => {
 
   try {
     const result = await db.query(
-      'UPDATE tests SET report = $1 WHERE testrun_id = $2 RETURNING id',
+      `
+      UPDATE tests 
+      SET report = $1, status = 'COMPLETED', progress = 1 
+      WHERE testrun_id = $2 
+      RETURNING id
+      `,
       [report, testRunId]
     );
 
