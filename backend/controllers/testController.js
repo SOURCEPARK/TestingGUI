@@ -252,7 +252,7 @@ export const restartTest = async (req, res) => {
 
     const test = testResult.rows[0];
     const testRunnerId = test.test_runner_id;
-    const testRunId = test.testRunId;
+    const testRunId = test.testrun_id;
     const testPlanId = test.test_plan_id;
 
     const runnerResult = await db.query(
@@ -313,22 +313,74 @@ export const restartTest = async (req, res) => {
   }
 };
 
-//GET test status
 export const getTestStatus = async (req, res) => {
-  //the id is the random test id, not the test plan id
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing test ID.");
 
   try {
-    const result = await db.query('SELECT id, test_plan_id, status, progress, last_message FROM tests WHERE id = $1', [id]);
-    if (result.rows.length > 0) {
-      res.status(200).json(result.rows);
-    } else {
-      res.status(404).json("Test not found");
+    const testResult = await db.query(
+      'SELECT testrun_id, test_runner_id FROM tests WHERE id = $1',
+      [id]
+    );
+
+    if (testResult.rows.length === 0) {
+      return res.status(404).json("Test nicht gefunden");
     }
+
+    const { testrun_id: testRunId, test_runner_id: runnerId } = testResult.rows[0];
+    if (!testRunId || !runnerId) {
+      return res.status(400).json("Fehlende runnerId oder testRunId.");
+    }
+
+    const runnerResult = await db.query(
+      'SELECT url FROM test_runners WHERE id = $1',
+      [runnerId]
+    );
+
+    if (runnerResult.rows.length === 0) {
+      return res.status(404).json("Testrunner nicht gefunden");
+    }
+
+    const runnerUrl = runnerResult.rows[0].url;
+    const response = await axios.get(`${runnerUrl}/test-status/${testRunId}`);
+    const data = response.data;
+
+    await db.query(`
+      UPDATE tests SET 
+        status = COALESCE($1, status),
+        start_time = COALESCE($2::timestamptz, start_time),
+        elapsed_seconds = COALESCE($3, elapsed_seconds),
+        progress = COALESCE($4, progress),
+        error_code = COALESCE($5, error_code),
+        error_text = COALESCE($6, error_text),
+        last_message = COALESCE($7, last_message)
+      WHERE id = $8
+    `, [
+      data.status || null,
+      data.startTime || null,
+      data.elapsedSeconds || null,
+      data.progress || null,
+      data.errorcode || null,
+      data.errortext || null,
+      data.message || null,
+      id
+    ]);
+
+    // Hole aktualisierte Daten im alten Format
+    const result = await db.query(
+      'SELECT id, status, progress, last_message FROM tests WHERE id = $1',
+      [id]
+    );
+
+    res.status(200).json(result.rows); // wie im alten Handler: [] mit einem Objekt
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Database error");
+    if (err.response?.status === 404) {
+      res.status(404).json("Testlauf nicht gefunden");
+    } else {
+      console.error("Fehler bei der Statusabfrage:", err.message);
+      res.status(500).json("Fehler beim Abrufen des Teststatus");
+    }
   }
 };
 
@@ -479,4 +531,29 @@ export const getLastReload = async (req, res) => {
   } else {
     res.status(200).json(result.rows[0]);
   }
+};
+
+//GET sends stop to TestRunner that executes the specified test
+export const stopTest = async (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json("Missing required test ID");
+
+
+};
+
+//GET sends resume to TestRunner that executes the specified test - if the test was stopped
+export const resumeTest = async (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json("Missing required test ID");
+
+  try{
+    const status = await db.query(
+    'SELECT status FROM tests WHERE id = $1'
+    );
+
+
+  } catch (err) {
+
+  }
+
 };

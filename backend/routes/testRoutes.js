@@ -23,5 +23,9 @@ router.delete('/:id', testController.deleteTest);
 router.get('/:id', testController.getTestById);
 //GET paginated list of test runners
 router.get('/', testController.getTests);
+//GET stop in path specified test
+router.get('/:id/stop', testController.stopTest);
+//GET resumes in path specified test
+router.get('/:id/resume', testController.resumeTest);
 
 export default router;
