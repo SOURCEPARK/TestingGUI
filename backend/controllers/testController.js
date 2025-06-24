@@ -225,7 +225,7 @@ export const deleteTest = async (req, res) => {
   }
 };
 
-// POST restart a test by giving the test_plan_id, not the test id
+// POST restart a test by test id
 export const restartTest = async (req, res) => {
   //The id here is the test_id after checking in the GUI
   const { id } = req.params;
@@ -313,6 +313,7 @@ export const restartTest = async (req, res) => {
   }
 };
 
+//GET current test status
 export const getTestStatus = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing test ID.");

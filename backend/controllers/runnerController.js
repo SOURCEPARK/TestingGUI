@@ -15,10 +15,6 @@ export const getAllRunners = async (req, res) => {
       LIMIT $1 OFFSET $2`;
 
     const { rows } = await db.query(query, [limit, offset]);
-    if (rows.length === 0) {
-      return res.status(404).json("No test runners found.");
-    }
-
     res.status(200).json(rows);
   } catch (error) {
     console.error("Error fetching test runners:", error);
@@ -106,7 +102,7 @@ export const getHeartbeat = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json("Test runner not found");
     }
-    
+
     res.status(200).json(result.rows[0]);
   } catch (error) {
     console.error("Error fetching heartbeat:", error);
