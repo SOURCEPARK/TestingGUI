@@ -545,7 +545,35 @@ export const stopTest = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing required test ID");
 
+    try {
+    // Versuche, zugehörigen Runner zu finden (optional)
+    const runnerResult = await db.query(
+      `SELECT id, url FROM test_runners WHERE active_test = $1`, [id]
+    );
 
+    const testResult = await db.query(
+      `SELECT testrun_id FROM tests WHERE id = $1`, [id]
+    );
+    const testRunId = testResult.rows[0]?.testrun_id;
+
+    if (runnerResult.rows.length > 0) {
+      console.log("Stopping test:", testRunId);
+      const runnerUrl = runnerResult.rows[0].url;
+
+      try {
+        await axios.get(`${runnerUrl}/stop-test/${testRunId}`);
+      } catch (stopErr) {
+        console.error("Fehler beim Stoppen des Tests:", stopErr.message);
+        return res.status(500).json("Fehler beim Stoppen des Tests.");
+      }
+    }
+
+    res.status(200).json(`Test ${testRunId} gestoppt.`);
+
+    } catch (err) {
+      console.error("Database error:", err);
+      res.status(500).json("Database error");
+    }
 };
 
 //GET sends resume to TestRunner that executes the specified test - if the test was stopped
