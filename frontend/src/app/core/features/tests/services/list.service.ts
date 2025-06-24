@@ -63,8 +63,8 @@ export class TestListService {
   /** GET /test/last-reload */
   getLastReload(): Observable<string> {
     return this.http
-      .get<{ last_reload: string }[]>('/api/test/last-reload')
-      .pipe(map((arr) => arr[0]?.last_reload ?? ''));
+      .get<{ last_reload: string }>('/api/test/last-reload')
+      .pipe(map((arr) => arr?.last_reload ?? ''));
   }
 }
 
