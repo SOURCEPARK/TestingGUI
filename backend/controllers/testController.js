@@ -263,7 +263,9 @@ export const restartTest = async (req, res) => {
     //TODO: maybe change to check the runner status instead of checking if it exists
     if (runnerResult.rows.length === 0) {
       return res.status(404).json({
-        testPlanId: id,
+        testRunnerId: testRunnerId,
+        testId: id,
+        testPlanId: testPlanId,
         message: "Testrunner nicht gefunden",
         errorcode: "404",
         errortext: "Test runner not found"
@@ -272,7 +274,7 @@ export const restartTest = async (req, res) => {
 
     const runnerUrl = runnerResult.rows[0].url;
 
-    console.log(`Restarting test ${testPlanId} on runner ${testRunnerId} with URL ${runnerUrl}`);
+    console.log(`Restarting test ${testPlanId} on runner ${testRunnerId} with URL ${runnerUrl}, testRunId: ${testRunId}`);
 
     // Anfrage an den Testrunner nach API-Spec
     const response = await axios.get(`${runnerUrl}/restart-test/${testRunId}`);
@@ -288,12 +290,15 @@ export const restartTest = async (req, res) => {
       `, [now, testPlanId]);
 
       return res.status(200).json({
+        testId: id,
         testPlanId: testPlanId,
+        testRunId: testRunId,
         message: response.data.message || "Test erfolgreich neu gestartet"
       });
     } else {
       return res.status(500).json({
-        testPlanId: id,
+        testId: id,
+        testPlanId: testPlanId,
         testRunId: testRunId,
         message: "Teststart fehlgeschlagen",
         errorcode: `${response.status}`,
@@ -304,6 +309,7 @@ export const restartTest = async (req, res) => {
   } catch (error) {
     console.error("Restart error:", error.message);
     return res.status(500).json({
+      testId: id,
       testPlanId: testPlanId,
       testRunId: testRunId,
       message: "Fehler beim Neustart",
