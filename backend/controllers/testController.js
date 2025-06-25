@@ -566,6 +566,9 @@ export const stopTest = async (req, res) => {
         console.error("Fehler beim Stoppen des Tests:", stopErr.message);
         return res.status(500).json("Fehler beim Stoppen des Tests.");
       }
+
+      await db.query('UPDATE tests SET status = PAUSED WHERE id = $1', id);
+
     }
 
     res.status(200).json(`Test ${testRunId} gestoppt.`);

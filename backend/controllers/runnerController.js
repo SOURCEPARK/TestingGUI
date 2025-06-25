@@ -173,7 +173,19 @@ export const sendHeartbeat = async (req, res) => {
 
 // POST empfängt die regelmäßigen Heartbeats von den Runnern
 export const receiveHeartbeat = async (req, res) => {
-  const { timestamp, runnerId, status, sequence, uptimeSeconds, testStatus, progress, message } = req.body;
+  const {
+    timestamp,
+    runnerId,
+    status,
+    sequence,
+    uptimeSeconds,
+    testRunId,
+    testStatus,
+    progress,
+    message,
+    errorcode,
+    errortext
+  } = req.body;
 
   if (!timestamp || !runnerId || !status || sequence === undefined) {
     return res.status(400).json("Missing required heartbeat data");
@@ -188,13 +200,12 @@ export const receiveHeartbeat = async (req, res) => {
 
   try {
     const result = await db.query('SELECT * FROM test_runners WHERE id = $1', [runnerId]);
-
     if (result.rows.length === 0) {
       return res.status(404).json("Test runner not found");
     }
 
     const runner = result.rows[0];
-    const lastHeartbeat = runner.last_heartbeat || 0;
+    const lastHeartbeat = runner.last_heartbeat ? new Date(runner.last_heartbeat).getTime() : 0;
 
     if (currentTs - lastHeartbeat < 60_000) {
       return res.status(429).json(`Heartbeat too frequent. Wait ${60 - Math.floor((currentTs - lastHeartbeat) / 1000)}s.`);
@@ -220,6 +231,28 @@ export const receiveHeartbeat = async (req, res) => {
 
     if (status === 'IDLE') {
       await db.query(`UPDATE test_runners SET active_test = NULL WHERE id = $1`, [runnerId]);
+    }
+
+    if (testRunId) {
+      await db.query(`
+        UPDATE tests
+        SET 
+          status = COALESCE($1, status),
+          progress = COALESCE($2, progress),
+          last_message = COALESCE($3, last_message),
+          error_code = COALESCE($4, error_code),
+          error_text = COALESCE($5, error_text),
+          elapsed_seconds = COALESCE($6, elapsed_seconds)
+        WHERE testrun_id = $7
+      `, [
+        testStatus || null,
+        progress || null,
+        message || null,
+        errorcode || null,
+        errortext || null,
+        safeUptime,
+        testRunId
+      ]);
     }
 
     console.log(`Heartbeat #${sequence} from runner ${runnerId} received.`);

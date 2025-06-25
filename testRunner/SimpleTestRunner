@@ -29,7 +29,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             
         elif self.path.startswith("/stop-test/"):
             test_plan_id = self.path.split("/stop-test/")[1]
-            runner_state["status"] = "IDLE"
+            runner_state["status"] = "PAUSED"
             runner_state["last_updated"] = time.time()
             response = {
                 "message": f"Test plan mit ID {test_plan_id} wurde gestoppt.",
@@ -41,7 +41,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
         elif self.path.startswith("/restart-test/"):
             test_run_id = self.path.split("/restart-test/")[1]
 
-            runner_state["status"] = "IDLE"
+            runner_state["status"] = "RUNNING"
             runner_state["test_run_id"] = test_run_id
             runner_state["last_updated"] = time.time()
 
