@@ -10,8 +10,10 @@ import { NgClass, NgIf } from '@angular/common';
 import { TestListElement, TestListService } from '../../services/list.service';
 import { Dialog } from '@angular/cdk/dialog';
 import { ConfirmComponent } from '../../../shared/components/confirm/confirm.component';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, interval, startWith, switchMap } from 'rxjs';
 import { ToastService } from '../../../shared/services/toast.service';
+import { DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-list',
@@ -118,9 +120,9 @@ import { ToastService } from '../../../shared/services/toast.service';
               <span
                 class="inline-flex items-center gap-2"
                 [ngClass]="{
-                  ' text-red-600 ': test.status === 'Failed',
-                  ' text-green-600 ': test.status === 'Running',
-                  ' text-blue-600': test.status === 'Completed'
+                  ' text-red-600 ': test.status.toLowerCase() === 'failed',
+                  ' text-green-600 ': test.status.toLowerCase() === 'running',
+                  ' text-blue-600': test.status.toLowerCase() === 'completed'
                 }"
               >
                 {{ test.status }}
@@ -136,14 +138,61 @@ import { ToastService } from '../../../shared/services/toast.service';
               {{ test.progress }}%
             </td>
             <td class="whitespace-nowrap px-3 py-4 text-sm flex gap-2">
+              @if(test.status.toLowerCase() === 'running'){
               <button
-                class="text-orange-600 hover:text-orange-800"
+                class="text-orange-600 hover:text-orange-800 cursor-pointer"
+                (click)="onPauseClicked($event, test.id)"
+                aria-label="Pause"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-10 w-10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M10 9v6m4-6v6"
+                  />
+                </svg>
+              </button>
+              }
+
+              <!-- Resume (nur wenn Paused) -->
+              @if(test.status.toLowerCase() === 'paused'){
+              <button
+                class="text-orange-600 hover:text-orange-800 cursor-pointer"
+                (click)="onResumeClicked($event, test.id)"
+                aria-label="Resume"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-7 w-7"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M14.25 15.25L18 12l-3.75-3.25M6 18V6"
+                  />
+                </svg>
+              </button>
+              }
+
+              <button
+                class="text-orange-600 hover:text-orange-800 cursor-pointer"
                 (click)="onHeartbeatClicked($event, test.id)"
                 aria-label="Heartbeat"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
+                  class="h-7 w-7"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -159,13 +208,13 @@ import { ToastService } from '../../../shared/services/toast.service';
 
               <!-- Restart (RE) – jetzt mit kreisenden Pfeilen -->
               <button
-                class="text-orange-600 hover:text-orange-800"
+                class="text-orange-600 hover:text-orange-800 cursor-pointer"
                 (click)="onRefreshClicked($event, test.id)"
                 aria-label="Restart"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
+                  class="h-7 w-7"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -186,13 +235,13 @@ import { ToastService } from '../../../shared/services/toast.service';
 
               <!-- Delete (DEL) -->
               <button
-                class="text-orange-600 hover:text-orange-800"
+                class="text-orange-600 hover:text-orange-800 cursor-pointer"
                 (click)="onDeleteClicked($event, test.id)"
                 aria-label="Löschen"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
+                  class="h-7 w-7"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -223,6 +272,7 @@ export class TestsListComponent implements OnInit {
   private readonly dialog = inject(Dialog);
   private readonly toast = inject(ToastService);
   private readonly svc = inject(TestListService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /* --------------- Lifecycle --------------- */
   ngOnInit(): void {
@@ -232,6 +282,8 @@ export class TestsListComponent implements OnInit {
     this.tests.set(initial ?? []);
 
     this.loadLastReload();
+
+    this.startPolling();
   }
 
   lastReload = signal<string>('');
@@ -378,5 +430,51 @@ export class TestsListComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     })}`;
+  }
+
+  private startPolling(): void {
+    interval(10_000) // alle 10 000 ms
+      .pipe(
+        startWith(0), // sofort einmal feuern
+        switchMap(() => this.svc.getTests()),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((list) => this.tests.set(list));
+  }
+
+  async onPauseClicked(e: Event, id: string): Promise<void> {
+    e.stopPropagation();
+
+    try {
+      await firstValueFrom(this.svc.pauseTest(id));
+      this.toast.show('Test pausiert', 'info');
+      this.reloadTestsFromBackend();
+    } catch (err) {
+      console.error('Pausieren fehlgeschlagen', err);
+      this.toast.show('Pausieren fehlgeschlagen', 'error');
+    }
+  }
+
+  async onResumeClicked(e: Event, id: string): Promise<void> {
+    e.stopPropagation();
+
+    try {
+      await firstValueFrom(this.svc.resumeTest(id));
+      this.toast.show('Test fortgesetzt', 'info');
+      this.reloadTestsFromBackend();
+    } catch (err) {
+      console.error('Fortsetzen fehlgeschlagen', err);
+      this.toast.show('Fortsetzen fehlgeschlagen', 'error');
+    }
+  }
+
+  private reloadTestsFromBackend(): void {
+    this.svc.getTests().subscribe({
+      next: (list) => this.tests.set(list),
+      error: (err) => {
+        console.error('Fehler beim Nachladen der Tests', err);
+        this.toast.show('Fehler beim Neuladen der Testdaten', 'error');
+      },
+    });
   }
 }

@@ -25,6 +25,7 @@ export class TestrunnerListSerivce {
   }
 
   private formatUnix(timestamp: string): string {
+    if (!timestamp) return 'Unbekannt';
     const now = Date.now(); // ms
     const ts = Number(timestamp); // ms
     const diffSeconds = (now - ts) / 1000;

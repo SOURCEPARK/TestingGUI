@@ -28,8 +28,10 @@ import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
             <dd
               class="mt-1 text-3xl font-semibold tracking-tight"
               [ngClass]="{
-                ' text-red-600 ': testDetailData().status === 'Failed',
-                ' text-green-600 ': testDetailData().status !== 'Failed'
+                ' text-red-600 ':
+                  testDetailData().status.toLowerCase() === 'Failed',
+                ' text-green-600 ':
+                  testDetailData().status.toLowerCase() !== 'Failed'
               }"
             >
               {{ testDetailData().status }}

@@ -32,8 +32,9 @@ import { NgClass } from '@angular/common';
               class="mt-1 text-3xl font-semibold tracking-tight"
               [ngClass]="{
                 ' text-yellow-600 ':
-                  testrunnerDetailData().status === 'sleeping',
-                ' text-green-600 ': testrunnerDetailData().status !== 'sleeping'
+                  testrunnerDetailData().status.toLowerCase() === 'sleeping',
+                ' text-green-600 ':
+                  testrunnerDetailData().status.toLowerCase() !== 'sleeping'
               }"
             >
               {{ testrunnerDetailData().status }}

@@ -38,7 +38,7 @@ export class TestListService {
   }
 
   private formatUnix(timestamp: string | null | undefined): string {
-    if (!timestamp) return '---';
+    if (!timestamp) return 'Unbekannt';
 
     const now = Date.now();
     const ts = Number(timestamp);
@@ -65,6 +65,14 @@ export class TestListService {
     return this.http
       .get<{ last_reload: string }>('/api/test/last-reload')
       .pipe(map((arr) => arr?.last_reload ?? ''));
+  }
+
+  pauseTest(id: string): Observable<void> {
+    return this.http.get<void>(`/api/test/${id}/stop`, {});
+  }
+
+  resumeTest(id: string): Observable<void> {
+    return this.http.post<void>(`/api/test/${id}/resume`, {});
   }
 }
 
