@@ -23,8 +23,6 @@ services:
   frontend:
     build:
       context: ./frontend
-      args:
-        - FONTAWESOME_NPM_AUTH_TOKEN=${FONTAWESOME_NPM_AUTH_TOKEN}
     ports:
       - "4200:80"
     depends_on:
