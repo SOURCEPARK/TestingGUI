@@ -69,10 +69,6 @@ export const getAvailableRunnerForAvailableTest = async (req, res) => {
       [platform]
     );
 
-    if (runnerResult.rows.length === 0) {
-      return res.status(404).json("No available runners for this test.");
-    }
-
     res.status(200).json(runnerResult.rows);
   } catch (error) {
     console.error("Error fetching runners for test:", error);
