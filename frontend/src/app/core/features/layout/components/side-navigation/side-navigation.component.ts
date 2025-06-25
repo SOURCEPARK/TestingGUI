@@ -12,7 +12,7 @@ import { RouterModule } from '@angular/router';
         >
           <div class="flex h-16 shrink-0 items-center pt-4">
             <img
-              class="h-11 w-auto m-auto"
+              class="h-11 w-auto m-auto object-contain"
               src="assets/images/logo.png"
               alt="Your Company"
             />

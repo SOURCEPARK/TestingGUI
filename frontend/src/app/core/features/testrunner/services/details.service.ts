@@ -21,6 +21,7 @@ export class TestrunnerDetailSerivce {
         active_test: runner.active_test,
         elapsed_seconds: runner.elapsed_seconds,
         start_time: runner.start_time,
+        url: runner.url,
       }))
     );
   }
@@ -49,4 +50,5 @@ export interface testrunnerDetails {
   active_test?: string;
   elapsed_seconds?: string;
   start_time?: string;
+  url: string;
 }

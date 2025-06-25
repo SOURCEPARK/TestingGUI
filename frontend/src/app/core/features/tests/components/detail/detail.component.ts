@@ -47,22 +47,16 @@ import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
               {{ testDetailData().progress + ' %' }}
             </dd>
           </div>
-          <div
-            class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6"
-          >
-            <dt class="truncate text-sm font-medium text-gray-500">
-              Letztes Update
-            </dt>
-            <dd
-              class="mt-1 text-3xl font-semibold tracking-tight text-gray-900"
-            >
-              {{ testDetailData().last_message }}
-            </dd>
-          </div>
         </dl>
       </div>
       <div class="mt-6 border-t border-gray-100">
         <dl class="divide-y divide-gray-100">
+          <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+            <dt class="text-sm/6 font-medium text-gray-900">Letztes Update</dt>
+            <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+              {{ testDetailData().last_message }}
+            </dd>
+          </div>
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
             <dt class="text-sm/6 font-medium text-gray-900">Name</dt>
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
@@ -101,7 +95,7 @@ import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
             <dt class="text-sm/6 font-medium text-gray-900">Bericht</dt>
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-              {{ testDetailData().report }}
+              {{ testDetailData().report || '' | markdown }}
             </dd>
           </div>
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
