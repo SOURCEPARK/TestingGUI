@@ -39,14 +39,17 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             self._send_json(response)
 
         elif self.path.startswith("/restart-test/"):
-            test_run_id = self.path.split("/restart-test/")[1]
+            old_test_run_id = self.path.split("/restart-test/")[1]
+            test_run_id = str(uuid.uuid4())
 
             runner_state["status"] = "RUNNING"
             runner_state["test_run_id"] = test_run_id
             runner_state["last_updated"] = time.time()
 
             response = {
-                "message": f"Test plan mit test run ID {test_run_id} wurde neu gestartet.",
+                "oldTestRunId": old_test_run_id,
+                "testRunId": test_run_id,
+                "message": f"Test plan mit neuen test run ID {test_run_id} wurde neu gestartet.",
                 "status": runner_state["status"]
             }
 

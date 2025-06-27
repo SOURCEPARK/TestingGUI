@@ -252,7 +252,7 @@ export const restartTest = async (req, res) => {
 
     const test = testResult.rows[0];
     const testRunnerId = test.test_runner_id;
-    const testRunId = test.testrun_id;
+    let testRunId = test.testrun_id;
     const testPlanId = test.test_plan_id;
 
     const runnerResult = await db.query(
@@ -260,7 +260,6 @@ export const restartTest = async (req, res) => {
       [testRunnerId]
     );
 
-    //TODO: maybe change to check the runner status instead of checking if it exists
     if (runnerResult.rows.length === 0) {
       return res.status(404).json({
         testRunnerId: testRunnerId,
@@ -279,15 +278,19 @@ export const restartTest = async (req, res) => {
     // Anfrage an den Testrunner nach API-Spec
     const response = await axios.get(`${runnerUrl}/restart-test/${testRunId}`);
 
+    // Update testRunId from response
+    testRunId = response.data.testRunId;
+    console.log(`Test plan ${testPlanId} restarted on runner ${testRunnerId}, new testRunId: ${testRunId}`);
+
     if (response.status === 200) {
       const now = new Date().toISOString();
 
       // Teststatus aktualisieren
       await db.query(`
         UPDATE tests 
-        SET status = 'RUNNING', progress = 0, start_time = $1, elapsed_seconds = 0
-        WHERE test_plan_id = $2
-      `, [now, testPlanId]);
+        SET status = 'RUNNING', progress = 0, start_time = $1, elapsed_seconds = 0, testrun_id = $2, last_message = $3
+        WHERE id = $4
+      `, [now, testRunId, response.data.message ,id]);
 
       return res.status(200).json({
         testId: id,
