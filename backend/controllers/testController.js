@@ -549,15 +549,18 @@ export const stopTest = async (req, res) => {
   if (!id) return res.status(400).json("Missing required test ID");
 
     try {
-    // Versuche, zugehörigen Runner zu finden (optional)
     const runnerResult = await db.query(
       `SELECT id, url FROM test_runners WHERE active_test = $1`, [id]
     );
 
     const testResult = await db.query(
-      `SELECT testrun_id FROM tests WHERE id = $1`, [id]
+      `SELECT testrun_id, status FROM tests WHERE id = $1`, [id]
     );
     const testRunId = testResult.rows[0]?.testrun_id;
+
+    if(testResuslt.rows[0]?.status != "RUNNING"){
+      return res.status(400).json("Test is not Running")
+    }
 
     if (runnerResult.rows.length > 0) {
       console.log("Stopping test:", testRunId);
@@ -592,9 +595,33 @@ export const resumeTest = async (req, res) => {
     'SELECT status FROM tests WHERE id = $1'
     );
 
+    if(status.rows[0]?.status != "PAUSED"){
+      return res.status(400).json("Test is not paused")
+    }
 
+    const runnerResult = await db.query(
+      `SELECT id, url FROM test_runners WHERE active_test = $1`, [id]
+    );
+
+    if (runnerResult.rows.length > 0) {
+      console.log("Stopping test:", testRunId);
+      const runnerUrl = runnerResult.rows[0].url;
+
+      try {
+        await axios.get(`${runnerUrl}/resume-test/${testRunId}`);
+      } catch (resumeErr) {
+        console.error("Fehler beim Fortsetzen des Tests:", resumeErr.message);
+        return res.status(500).json("Fehler beim Fortsetzen des Tests.");
+      }
+
+      await db.query('UPDATE tests SET status = RUNNING WHERE id = $1', id);
+
+    }
+
+    res.status(200).json(`Test ${testRunId} fortgesetzt`);
   } catch (err) {
-
+    console.error("Database error:", err);
+    res.status(500).json("Database error");
   }
 
 };
