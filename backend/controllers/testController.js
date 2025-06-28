@@ -558,7 +558,7 @@ export const stopTest = async (req, res) => {
     );
     const testRunId = testResult.rows[0]?.testrun_id;
 
-    if(testResuslt.rows[0]?.status != "RUNNING"){
+    if(testResult.rows[0]?.status != "RUNNING"){
       return res.status(400).json("Test is not Running")
     }
 
@@ -573,7 +573,7 @@ export const stopTest = async (req, res) => {
         return res.status(500).json("Fehler beim Stoppen des Tests.");
       }
 
-      await db.query('UPDATE tests SET status = PAUSED WHERE id = $1', id);
+      await db.query('UPDATE tests SET status = $1 WHERE id = $2', ['PAUSED', id]);
 
     }
 
