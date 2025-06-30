@@ -126,6 +126,7 @@ export const sendHeartbeat = async (req, res) => {
       const status = response.data.status || 'ERROR';
 
       if (response.status === 200) {
+        //TODO: if active_test is not null, runner_status is ERROR, update the test status to FAILED
         await db.query(
           `UPDATE test_runners
            SET last_heartbeat = $1,
@@ -147,6 +148,7 @@ export const sendHeartbeat = async (req, res) => {
       }
     } catch (err) {
       // Runner nicht erreichbar
+      //TODO: if active_test is not null, runner_status is ERROR, update the test status to FAILED
       await db.query(
         `UPDATE test_runners
          SET status = $1,
@@ -173,9 +175,9 @@ export const sendHeartbeat = async (req, res) => {
 
 // POST empfängt die regelmäßigen Heartbeats von den Runnern
 export const receiveHeartbeat = async (req, res) => {
+  const { id: runnerId } = req.params;
   const {
     timestamp,
-    runnerId,
     status,
     sequence,
     uptimeSeconds,

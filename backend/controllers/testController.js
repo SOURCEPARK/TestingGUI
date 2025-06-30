@@ -153,6 +153,7 @@ export const startTest = async (req, res) => {
     );
     const testId = testIdRaw.rows[0].id;
 
+    //TODO: Update the test_runners table with test runner heartbeat response?
     //active_test has the random test id, not the test plan id
     await db.query(
       'UPDATE test_runners SET status = $1, active_test = $2 WHERE id = $3',
@@ -273,7 +274,7 @@ export const restartTest = async (req, res) => {
 
     const runnerUrl = runnerResult.rows[0].url;
 
-    console.log(`Restarting test ${testPlanId} on runner ${testRunnerId} with URL ${runnerUrl}, testRunId: ${testRunId}`);
+    console.log(`Restarting test plan ${testPlanId} on runner ${testRunnerId} with URL ${runnerUrl}, testRunId: ${testRunId}`);
 
     // Anfrage an den Testrunner nach API-Spec
     const response = await axios.get(`${runnerUrl}/restart-test/${testRunId}`);
@@ -291,6 +292,13 @@ export const restartTest = async (req, res) => {
         SET status = 'RUNNING', progress = 0, start_time = $1, elapsed_seconds = 0, testrun_id = $2, last_message = $3
         WHERE id = $4
       `, [now, testRunId, response.data.message ,id]);
+
+      //TODO: Update the test_runners table with test runner heartbeat response?
+      //Update test runner to RUNNING
+      await db.query(
+        'UPDATE test_runners SET status = $1 WHERE id = $2',
+        ['RUNNING', testRunnerId]
+      );
 
       return res.status(200).json({
         testId: id,
@@ -313,8 +321,8 @@ export const restartTest = async (req, res) => {
     console.error("Restart error:", error.message);
     return res.status(500).json({
       testId: id,
-      testPlanId: testPlanId,
-      testRunId: testRunId,
+      //testPlanId: testPlanId,
+      //testRunId: testRunId,
       message: "Fehler beim Neustart",
       errorcode: "500",
       errortext: error.message
@@ -549,35 +557,39 @@ export const stopTest = async (req, res) => {
   if (!id) return res.status(400).json("Missing required test ID");
 
     try {
-    const runnerResult = await db.query(
-      `SELECT id, url FROM test_runners WHERE active_test = $1`, [id]
-    );
+      const runnerResult = await db.query(
+        `SELECT id, url FROM test_runners WHERE active_test = $1`, [id]
+      );
 
-    const testResult = await db.query(
-      `SELECT testrun_id, status FROM tests WHERE id = $1`, [id]
-    );
-    const testRunId = testResult.rows[0]?.testrun_id;
+      const testResult = await db.query(
+        `SELECT testrun_id, status FROM tests WHERE id = $1`, [id]
+      );
+      const testRunId = testResult.rows[0]?.testrun_id;
 
-    if(testResult.rows[0]?.status != "RUNNING"){
-      return res.status(400).json("Test is not Running")
-    }
-
-    if (runnerResult.rows.length > 0) {
-      console.log("Stopping test:", testRunId);
-      const runnerUrl = runnerResult.rows[0].url;
-
-      try {
-        await axios.get(`${runnerUrl}/stop-test/${testRunId}`);
-      } catch (stopErr) {
-        console.error("Fehler beim Stoppen des Tests:", stopErr.message);
-        return res.status(500).json("Fehler beim Stoppen des Tests.");
+      if(testResult.rows[0]?.status != "RUNNING"){
+        return res.status(400).json("Test is not Running")
       }
 
-      await db.query('UPDATE tests SET status = $1 WHERE id = $2', ['PAUSED', id]);
+      if (runnerResult.rows.length > 0) {
+        console.log("Stopping test:", testRunId);
+        const runnerUrl = runnerResult.rows[0].url;
 
-    }
+        try {
+          await axios.get(`${runnerUrl}/stop-test/${testRunId}`);
+        } catch (stopErr) {
+          console.error("Fehler beim Stoppen des Tests:", stopErr.message);
+          return res.status(500).json("Fehler beim Stoppen des Tests.");
+        }
 
-    res.status(200).json(`Test ${testRunId} gestoppt.`);
+        await db.query('UPDATE tests SET status = $1 WHERE id = $2', ['PAUSED', id]);
+        //Update test runner to PAUSED
+        // await db.query(
+        //   'UPDATE test_runners SET status = $1 WHERE id = $2',
+        //   ['PAUSED', testRunnerId]
+        // );
+      }
+
+      res.status(200).json(`Test ${testRunId} gestoppt.`);
 
     } catch (err) {
       console.error("Database error:", err);
