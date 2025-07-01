@@ -122,7 +122,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                 [ngClass]="{
                   ' text-red-600 ': test.status.toLowerCase() === 'failed',
                   ' text-green-600 ': test.status.toLowerCase() === 'running',
-                  ' text-blue-600': test.status.toLowerCase() === 'completed'
+                  ' text-blue-600': test.status.toLowerCase() === 'completed',
+                  ' text-yellow-600': test.status.toLowerCase() === 'paused'
                 }"
               >
                 {{ test.status }}

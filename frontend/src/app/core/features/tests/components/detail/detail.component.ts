@@ -29,9 +29,13 @@ import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
               class="mt-1 text-3xl font-semibold tracking-tight"
               [ngClass]="{
                 ' text-red-600 ':
-                  testDetailData().status.toLowerCase() === 'Failed',
+                  testDetailData().status.toLowerCase() === 'failed',
                 ' text-green-600 ':
-                  testDetailData().status.toLowerCase() !== 'Failed'
+                  testDetailData().status.toLowerCase() !== 'failed',
+                ' text-yellow-600 ':
+                  testDetailData().status.toLowerCase() === 'paused',
+                ' text-blue-600':
+                  testDetailData().status.toLowerCase() === 'completed'
               }"
             >
               {{ testDetailData().status }}
