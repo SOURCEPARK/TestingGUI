@@ -72,7 +72,7 @@ export class TestListService {
   }
 
   resumeTest(id: string): Observable<void> {
-    return this.http.post<void>(`/api/test/${id}/resume`, {});
+    return this.http.get<void>(`/api/test/${id}/resume`, {});
   }
 }
 

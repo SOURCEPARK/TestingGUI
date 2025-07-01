@@ -112,7 +112,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         </thead>
         <tbody class="divide-y divide-gray-200">
           @for(test of tests();track test){
-          <tr class="hover:bg-gray-100" [routerLink]="[test.id]">
+          <tr class="hover:bg-gray-100 cursor-pointer" [routerLink]="[test.id]">
             <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
               {{ test.name }}
             </td>

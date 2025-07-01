@@ -67,7 +67,10 @@ import { NgClass } from '@angular/common';
 
           <tbody class="divide-y divide-gray-200">
             @for (testrunner of testrunners(); track testrunner) {
-            <tr class="hover:bg-gray-100" [routerLink]="[testrunner.id]">
+            <tr
+              class="hover:bg-gray-100 cursor-pointer"
+              [routerLink]="[testrunner.id]"
+            >
               <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                 {{ testrunner.name }}
               </td>
