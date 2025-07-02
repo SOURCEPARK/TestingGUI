@@ -38,6 +38,26 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
 
             self._send_json(response)
 
+        elif self.path.startswith("/resume-test/"):
+            test_run_id = self.path.split("/resume-test/")[1]
+
+            # Prüfe, ob TestRunId passt
+            if test_run_id != runner_state["test_run_id"]:
+                self.send_response(404)
+                self.end_headers()
+                return
+
+            runner_state["status"] = "RUNNING"
+            runner_state["last_updated"] = time.time()
+
+            response = {
+                "message": f"Test run {test_run_id} wurde fortgesetzt.",
+                "status": runner_state["status"],
+                "testRunId": test_run_id
+            }
+            self._send_json(response)
+
+
         elif self.path.startswith("/restart-test/"):
             old_test_run_id = self.path.split("/restart-test/")[1]
             test_run_id = str(uuid.uuid4())
