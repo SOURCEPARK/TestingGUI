@@ -79,10 +79,10 @@ import { NgClass } from '@angular/common';
                 <span
                   class="inline-flex items-center gap-2"
                   [ngClass]="{
-                    'text-yellow-600':
-                      testrunner.status.toLowerCase() === 'sleeping',
+                    'text-blue-600': testrunner.status.toLowerCase() === 'idle',
                     'text-green-600':
-                      testrunner.status.toLowerCase() !== 'sleeping'
+                      testrunner.status.toLowerCase() === 'running',
+                    'text-red-600': testrunner.status.toLowerCase() !== 'error'
                   }"
                 >
                   {{ testrunner.status }}

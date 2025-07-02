@@ -31,10 +31,12 @@ import { NgClass } from '@angular/common';
             <dd
               class="mt-1 text-3xl font-semibold tracking-tight"
               [ngClass]="{
-                ' text-yellow-600 ':
-                  testrunnerDetailData().status.toLowerCase() === 'sleeping',
-                ' text-green-600 ':
-                  testrunnerDetailData().status.toLowerCase() !== 'sleeping'
+                'text-blue-600':
+                  testrunnerDetailData().status.toLowerCase() === 'idle',
+                'text-green-600':
+                  testrunnerDetailData().status.toLowerCase() === 'running',
+                'text-red-600':
+                  testrunnerDetailData().status.toLowerCase() !== 'error'
               }"
             >
               {{ testrunnerDetailData().status }}
