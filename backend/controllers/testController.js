@@ -291,8 +291,8 @@ export const restartTest = async (req, res) => {
 
     if (response.status === 200) {
       await db.query(
-        'UPDATE tests SET testrun_id = $1 WHERE id = $2',
-        [testRunId, id]
+        'UPDATE tests SET testrun_id = $1, progress = $2 WHERE id = $3',
+        [testRunId, 0.0, id]
       );
 
       await heartbeatUpdate(runner);
@@ -363,7 +363,6 @@ export const getTestStatus = async (req, res) => {
     }
 
     const runnerUrl = runnerResult.rows[0].url;
-    //TODO: testRunId might be the old Id
     const response = await axios.get(`${runnerUrl}/test-status/${testRunId}`);
     const data = response.data;
 

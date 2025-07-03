@@ -9,7 +9,7 @@ router.get('/', runnerController.getAllRunners);
 //GET detailed test runner information
 router.get('/:id', runnerController.getRunnerById);
 //GET heartbeat to frontend
-router.get('/:id/heartbeat', runnerController.getHeartbeat);
+//router.get('/:id/heartbeat', runnerController.getHeartbeat);//TODO: seems unused, remove if not needed
 //GET available runners for test xyz mit platform x - which runners that are IDLE can run this platform and therefore the test
 router.get('/:id/available', runnerController.getAvailableRunnerForAvailableTest);
 

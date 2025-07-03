@@ -76,35 +76,36 @@ export const getAvailableRunnerForAvailableTest = async (req, res) => {
   }
 };
 
+//TODO: seems unused, remove if not needed
 //GET Heartbeat aus DB ans Frontend senden
-export const getHeartbeat = async (req, res) => {
-  const { id } = req.params;
+// export const getHeartbeat = async (req, res) => {
+//   const { id } = req.params;
 
-  try {
-    const result = await db.query(
-      `SELECT id AS runnerId,
-              status,
-              last_heartbeat AS timestamp,
-              elapsed_seconds AS uptimeSeconds,
-              last_feedback,
-              last_update,
-              platform,
-              url
-       FROM test_runners
-       WHERE id = $1`,
-      [id]
-    );
+//   try {
+//     const result = await db.query(
+//       `SELECT id AS runnerId,
+//               status,
+//               last_heartbeat AS timestamp,
+//               elapsed_seconds AS uptimeSeconds,
+//               last_feedback,
+//               last_update,
+//               platform,
+//               url
+//        FROM test_runners
+//        WHERE id = $1`,
+//       [id]
+//     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json("Test runner not found");
-    }
+//     if (result.rows.length === 0) {
+//       return res.status(404).json("Test runner not found");
+//     }
 
-    res.status(200).json(result.rows[0]);
-  } catch (error) {
-    console.error("Error fetching heartbeat:", error);
-    res.status(500).json("Failed to fetch heartbeat data.");
-  }
-};
+//     res.status(200).json(result.rows[0]);
+//   } catch (error) {
+//     console.error("Error fetching heartbeat:", error);
+//     res.status(500).json("Failed to fetch heartbeat data.");
+//   }
+// };
 
 // POST Heartbeat weiterleiten und prüfen, ob Runner erreichbar ist
 export const sendHeartbeat = async (req, res) => {
@@ -433,12 +434,14 @@ export const heartbeatUpdate = async (runner) => {
               SET status = 'FAILED',
                   last_message = $1,
                   error_code = $2,
-                  error_text = $3
-              WHERE id = $4`,
+                  error_text = $3,
+                  progress = $4
+              WHERE id = $5`,
               [response.data.message || 'Runner reported an error.',
                 response.data.errorcode || '500',
                 response.data.errortext || 'Runner reported an error.',
-              runner.active_test]
+                0.0,
+                runner.active_test]
             );
             console.log(`Test ${runner.active_test} status set to FAILED due to runner error.`);
           }
@@ -502,10 +505,12 @@ export const heartbeatUpdate = async (runner) => {
                last_message = $1,
                error_code = $2,
                error_text = $3
+               progress = $4
            WHERE id = $4`,
           ['Runner did not respond to health check.',
             '503',
             'Runner did not respond to health check.',
+            0.0,
             runner.active_test]
         );
         console.log(`Test ${runner.active_test} status set to FAILED due to runner not responding.`);
