@@ -118,55 +118,119 @@ export const sendHeartbeat = async (req, res) => {
     }
 
     const runner = result.rows[0];
-    const now = new Date();
 
-    try {
-      // Anfrage an Testrunner senden
-      const response = await axios.get(`${runner.url}/heartbeat`);
-      const status = response.data.status || 'ERROR';
+    await heartbeatUpdate(runner);
 
-      if (response.status === 200) {
-        //TODO: if active_test is not null, runner_status is ERROR, update the test status to FAILED
-        await db.query(
-          `UPDATE test_runners
-           SET last_heartbeat = $1,
-               status = $2,
-               last_feedback = $3,
-               last_update = $4
-           WHERE id = $5`,
-          [
-            Date.now(),
-            status,
-            'Runner responded to health check.',
-            now.toISOString(),
-            id
-          ]
-        );
+    return res.status(200).json(`Runner: ${id} is ${runner.status}.`);
+    //const now = new Date();
 
-        console.log(`Runner ${id} is ${status}.`);
-        return res.status(200).json(`Runner ${id} is ${status}.`);
-      }
-    } catch (err) {
-      // Runner nicht erreichbar
-      //TODO: if active_test is not null, runner_status is ERROR, update the test status to FAILED
-      await db.query(
-        `UPDATE test_runners
-         SET status = $1,
-             last_feedback = $2,
-             last_update = $3
-         WHERE id = $4`,
-        [
-          'ERROR',
-          'Runner did not respond to health check.',
-          now.toISOString(),
-          id
-        ]
-      );
+    // try {
+    //   // Anfrage an Testrunner senden
+    //   const response = await axios.get(`${runner.url}/heartbeat`);
 
-      console.error(`Runner ${id} is not responding:`, err.message, `Runner status set to ERROR.`);
-      //console.warn(`Runner ${id} is not responding.`);
-      return res.status(503).json(`Runner ${id} is not responding. Runner status set to ERROR.`);
-    }
+    //   if (response.status === 200) {
+    //     const status = response.data.status || 'ERROR';
+
+    //     // if runner status is ERROR, update the test status to FAILED if active_test is not null
+    //     if (status === 'ERROR') {
+    //       await db.query(
+    //         `UPDATE test_runners
+    //          SET status = $1,
+    //              last_feedback = $2,
+    //              last_update = $3
+    //          WHERE id = $4`,
+    //         [status, response.data.message || 'Runner reported an error.', now.toISOString(), id]
+    //       );
+
+    //       console.log(`Runner ${id} reported an error: ${response.data.message}.`);
+
+    //       if (runner.active_test) {
+    //         await db.query(
+    //           `UPDATE tests
+    //           SET status = 'FAILED',
+    //               last_message = $1,
+    //               error_code = $2,
+    //               error_text = $3
+    //           WHERE id = $4`,
+    //           [response.data.message || 'Runner reported an error.',
+    //             response.data.errorcode || '500',
+    //             response.data.errortext || 'Runner reported an error.',
+    //           runner.active_test]
+    //         );
+    //         console.log(`Test ${runner.active_test} status set to FAILED due to runner error.`);
+    //       }
+
+    //       return res.status(200).json(`Runner ${id} reported an error: ${response.data.message}.`);
+    //     }else if(status === 'IDLE' && runner.active_test) {
+    //       // if runner is IDLE and has an active test, set the active_test to NULL
+    //       await db.query(
+    //         `UPDATE test_runners
+    //          SET active_test = NULL,
+    //              status = $1,
+    //              last_feedback = $2,
+    //              last_update = $3,
+    //               last_heartbeat = $4
+    //          WHERE id = $5`,
+    //         [status, response.data.message || 'Runner is now idle.', now.toISOString(), Date.now(), id]
+    //       );
+
+    //       console.log(`Runner ${id} is now idle. Active test cleared.`);
+    //       return res.status(200).json(`Runner ${id} is now idle. Active test cleared.`);
+    //     }
+
+    //     await db.query(
+    //       `UPDATE test_runners
+    //        SET last_heartbeat = $1,
+    //            status = $2,
+    //            last_feedback = $3,
+    //            last_update = $4
+    //        WHERE id = $5`,
+    //       [
+    //         Date.now(),
+    //         status,
+    //         response.data.message || 'Runner responded to health check.',
+    //         now.toISOString(),
+    //         id
+    //       ]
+    //     );
+
+    //     console.log(`Runner ${id} is ${status}.`);
+    //     return res.status(200).json(`Runner ${id} is ${status}.`);
+    //   }
+    // } catch (err) {
+    //   // Runner nicht erreichbar
+    //   await db.query(
+    //     `UPDATE test_runners
+    //      SET status = $1,
+    //          last_feedback = $2,
+    //          last_update = $3
+    //      WHERE id = $4`,
+    //     [
+    //       'ERROR',
+    //       'Runner did not respond to health check.',
+    //       now.toISOString(),
+    //       id
+    //     ]
+    //   );
+    //   if (runner.active_test) {
+    //     await db.query(
+    //       `UPDATE tests
+    //        SET status = 'FAILED',
+    //            last_message = $1,
+    //            error_code = $2,
+    //            error_text = $3
+    //        WHERE id = $4`,
+    //       ['Runner did not respond to health check.',
+    //         '503',
+    //         'Runner did not respond to health check.',
+    //         runner.active_test]
+    //     );
+    //     console.log(`Test ${runner.active_test} status set to FAILED due to runner not responding.`);
+    //   }
+
+    //   console.error(`Runner ${id} is not responding:`, err.message, `Runner status set to ERROR.`);
+    //   return res.status(503).json(`Runner ${id} is not responding. Runner status set to ERROR.`);
+    // }
   } catch (error) {
     console.error("Database error:", error);
     res.status(500).json("Database error");
@@ -340,3 +404,114 @@ export const receiveCompleted = async (req, res) => {
     res.status(500).json("Interner Serverfehler beim Speichern des Reports");
   }
 };
+
+export const heartbeatUpdate = async (runner) => {
+  const now = new Date();
+  try {
+      // Anfrage an Testrunner senden
+      const response = await axios.get(`${runner.url}/heartbeat`);
+
+      if (response.status === 200) {
+        const status = response.data.status || 'ERROR';
+
+        // if runner status is ERROR, update the test status to FAILED if active_test is not null
+        if (status === 'ERROR') {
+          await db.query(
+            `UPDATE test_runners
+             SET status = $1,
+                 last_feedback = $2,
+                 last_update = $3
+             WHERE id = $4`,
+            [status, response.data.message || 'Runner reported an error.', now.toISOString(), runner.id]
+          );
+
+          console.log(`Runner ${runner.id} reported an error: ${response.data.message}.`);
+
+          if (runner.active_test) {
+            await db.query(
+              `UPDATE tests
+              SET status = 'FAILED',
+                  last_message = $1,
+                  error_code = $2,
+                  error_text = $3
+              WHERE id = $4`,
+              [response.data.message || 'Runner reported an error.',
+                response.data.errorcode || '500',
+                response.data.errortext || 'Runner reported an error.',
+              runner.active_test]
+            );
+            console.log(`Test ${runner.active_test} status set to FAILED due to runner error.`);
+          }
+
+          //return res.status(200).json(`Runner ${id} reported an error: ${response.data.message}.`);
+        }else if(status === 'IDLE' && runner.active_test) {
+          // if runner is IDLE and has an active test, set the active_test to NULL
+          await db.query(
+            `UPDATE test_runners
+             SET active_test = NULL,
+                 status = $1,
+                 last_feedback = $2,
+                 last_update = $3,
+                  last_heartbeat = $4
+             WHERE id = $5`,
+            [status, response.data.message || 'Runner is now idle.', now.toISOString(), Date.now(), runner.id]
+          );
+
+          console.log(`Runner ${runner.id} is now idle. Active test cleared.`);
+          //return res.status(200).json(`Runner ${id} is now idle. Active test cleared.`);
+        }
+
+        await db.query(
+          `UPDATE test_runners
+           SET last_heartbeat = $1,
+               status = $2,
+               last_feedback = $3,
+               last_update = $4
+           WHERE id = $5`,
+          [
+            Date.now(),
+            status,
+            response.data.message || 'Runner responded to health check.',
+            now.toISOString(),
+            runner.id
+          ]
+        );
+
+        console.log(`Runner ${runner.id}'s status is: ${status}.`);
+        //return res.status(200).json(`Runner ${id} is ${status}.`);
+      }
+    } catch (err) {
+      // Runner nicht erreichbar
+      await db.query(
+        `UPDATE test_runners
+         SET status = $1,
+             last_feedback = $2,
+             last_update = $3
+         WHERE id = $4`,
+        [
+          'ERROR',
+          'Runner did not respond to health check.',
+          now.toISOString(),
+          runner.id
+        ]
+      );
+      if (runner.active_test) {
+        await db.query(
+          `UPDATE tests
+           SET status = 'FAILED',
+               last_message = $1,
+               error_code = $2,
+               error_text = $3
+           WHERE id = $4`,
+          ['Runner did not respond to health check.',
+            '503',
+            'Runner did not respond to health check.',
+            runner.active_test]
+        );
+        console.log(`Test ${runner.active_test} status set to FAILED due to runner not responding.`);
+      }
+
+      console.error(`Runner ${runner.id} is not responding:`, err.message, `Runner status set to ERROR.`);
+      //return res.status(503).json(`Runner ${id} is not responding. Runner status set to ERROR.`);
+    }
+}

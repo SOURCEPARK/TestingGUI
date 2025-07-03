@@ -1,6 +1,7 @@
 import db from '../config/db.js';
 import axios from 'axios';
 import {v4 as uuidv4 } from 'uuid';
+import { heartbeatUpdate } from './runnerController.js';
 
 //GET paginated list of tests
 export const getTests = async (req, res) => {
@@ -100,7 +101,7 @@ export const startTest = async (req, res) => {
     }
 
     const runnerResult = await db.query(
-      'SELECT url FROM test_runners WHERE id = $1',
+      'SELECT * FROM test_runners WHERE id = $1',
       [testRunnerId]
     );
     if (runnerResult.rows.length === 0) {
@@ -112,10 +113,9 @@ export const startTest = async (req, res) => {
       });
     }
 
-    const runnerUrl = runnerResult.rows[0].url;
-    console.log("Runner URL:", runnerUrl);
+    const runner = runnerResult.rows[0];
 
-    const response = await axios.post(`${runnerUrl}/start-test`, {
+    const response = await axios.post(`${runner.url}/start-test`, {
       testDescription: testResult.rows[0].description,
       testPlan: testPlanUrl,
       platforms: platforms
@@ -153,12 +153,13 @@ export const startTest = async (req, res) => {
     );
     const testId = testIdRaw.rows[0].id;
 
-    //TODO: Update the test_runners table with test runner heartbeat response?
     //active_test has the random test id, not the test plan id
     await db.query(
       'UPDATE test_runners SET status = $1, active_test = $2 WHERE id = $3',
       ['RUNNING', testId, testRunnerId]
     );
+
+    await heartbeatUpdate(runner);
 
     return res.status(200).json({
       testRunId: testRunId,
@@ -260,7 +261,7 @@ export const restartTest = async (req, res) => {
     const testPlanId = test.test_plan_id;
 
     const runnerResult = await db.query(
-      'SELECT url FROM test_runners WHERE id = $1',
+      'SELECT * FROM test_runners WHERE id = $1',
       [testRunnerId]
     );
 
@@ -279,35 +280,22 @@ export const restartTest = async (req, res) => {
       });
     }
 
-    const runnerUrl = runnerResult.rows[0].url;
+    const runner = runnerResult.rows[0];
 
-    console.log(`Restarting test plan ${testPlanId} on runner ${testRunnerId} with URL ${runnerUrl}, testRunId: ${testRunId}`);
+    console.log(`Restarting test plan ${testPlanId} on runner ${testRunnerId} with URL ${runner.url}, testRunId: ${testRunId}`);
 
-    const response = await axios.get(`${runnerUrl}/restart-test/${testRunId}`);
+    const response = await axios.get(`${runner.url}/restart-test/${testRunId}`);
 
     testRunId = response.data.testRunId;
     console.log(`Test plan ${testPlanId} restarted on runner ${testRunnerId}, new testRunId: ${testRunId}`);
 
     if (response.status === 200) {
-      const now = new Date().toISOString();
-
-      await db.query(`
-        UPDATE tests 
-        SET status = 'RUNNING',
-            progress = 0,
-            start_time = $1,
-            elapsed_seconds = 0,
-            testrun_id = $2,
-            last_message = $3,
-            error_text = NULL,
-            error_code = NULL
-        WHERE id = $4
-      `, [now, testRunId, response.data.message, id]);
-
       await db.query(
-        'UPDATE test_runners SET status = $1 WHERE id = $2',
-        ['RUNNING', testRunnerId]
+        'UPDATE tests SET testrun_id = $1 WHERE id = $2',
+        [testRunId, id]
       );
+
+      await heartbeatUpdate(runner);
 
       return res.status(200).json({
         testId: id,
@@ -375,6 +363,7 @@ export const getTestStatus = async (req, res) => {
     }
 
     const runnerUrl = runnerResult.rows[0].url;
+    //TODO: testRunId might be the old Id
     const response = await axios.get(`${runnerUrl}/test-status/${testRunId}`);
     const data = response.data;
 
