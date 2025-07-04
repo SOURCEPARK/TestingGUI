@@ -243,7 +243,7 @@ export const deleteTest = async (req, res) => {
 
     console.log(`Test ${testRunId} deleted successfully. Runner ${runnerId} is now available.`);
 
-    res.status(200).json(`Test ${testRunId} gelöscht. Test runner ${runnerId} wieder verfügbar.`);
+    res.status(200).json(`Test: ${id} mit testRunId: ${testRunId} gelöscht. Test runner ${runnerId} wieder verfügbar.`);
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json("Database error");
@@ -451,7 +451,7 @@ export const getAvailableTests = async (req, res) => {
   }
 };
 
-/** * GET list of available test runners
+/** * GET list of available test runners of the test plan required platform.
  * @param {Object} req - Express request object containing the test plan ID in params.
  * @param {Object} res - Express response object to send the result.
  * @returns {Promise<void>} Sends a list of available test runners or an error message.
@@ -592,7 +592,7 @@ export const reloadTests = async (req, res) => {
  * @param {Object} res - Express response object to send the result.
  * @returns {Promise<void>} Sends the last reload timestamp or a message if not yet loaded.
  */
-export const getLastReload = async (res) => {
+export const getLastReload = async (req, res) => {
   const result = await db.query('SELECT DISTINCT last_reload FROM available_tests');
   if (result.rows.length === 0) {
     res.status(200).json({
@@ -646,7 +646,7 @@ export const stopTest = async (req, res) => {
         // );
       }
 
-      res.status(200).json(`Test ${testRunId} gestoppt.`);
+      res.status(200).json(`Test: ${id} mit testRunId: ${testRunId} gestoppt.`);
 
     } catch (err) {
       console.error("Database error:", err);
@@ -707,7 +707,7 @@ export const resumeTest = async (req, res) => {
         ['RUNNING', runnerResult.rows[0].id]
       );
 
-      return res.status(200).json(`Test ${testRunId} fortgesetzt`);
+      return res.status(200).json(`Test: ${id} mit testRunId: ${testRunId} fortgesetzt`);
     } else {
       return res.status(404).json("Testrunner not found for this test");
     }

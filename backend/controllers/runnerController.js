@@ -56,26 +56,27 @@ export const getRunnerById = async (req, res) => {
 };
 
 /** * GET available runners for a specific test based on its required platform.
- * @param {Object} req - Express request object containing the test ID in params.
+ * @param {Object} req - Express request object containing the test Plan ID in params.
  * @param {Object} res - Express response object to send the result.
  * @returns {Promise<void>} Sends the list of available runners or an error message.
  */
 export const getAvailableRunnerForAvailableTest = async (req, res) => {
-  const { id:testId } = req.params;
+  // the required id is actually the test_plan_id
+  const { id:testPlanId } = req.params;
 
-  if (!testId) {
-    return res.status(400).json("Missing testId.");
+  if (!testPlanId) {
+    return res.status(400).json("Missing testPlanId.");
   }
 
   try {
     // Platform des Tests holen
     const testResult = await db.query(
       `SELECT platform FROM available_tests WHERE id = $1`,
-      [testId]
+      [testPlanId]
     );
 
     if (testResult.rows.length === 0) {
-      return res.status(404).json("Test not found.");
+      return res.status(404).json("Testplan not found.");
     }
 
     const platform = testResult.rows[0].platform;
