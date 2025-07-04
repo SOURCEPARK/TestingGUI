@@ -3,7 +3,18 @@ import axios from 'axios';
 import {v4 as uuidv4 } from 'uuid';
 import { heartbeatUpdate } from './runnerController.js';
 
-//GET paginated list of tests
+/** * Test Controller for managing tests in the Testing GUI application.
+ * Handles operations such as retrieving, starting, stopping, and restarting tests,
+ * as well as managing test runners and available tests.
+ *
+ * @module testController
+ */
+
+/** *GET paginated list of tests
+ * @param {Object} req - Express request object containing pagination parameters.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a paginated list of tests or an error message.
+ */
 export const getTests = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10000;
@@ -25,12 +36,14 @@ export const getTests = async (req, res) => {
   }
 };
 
-//GET detailed test information
+/** *GET detailed information about a specific test by its ID.
+ * @param {Object} req - Express request object containing the test ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends detailed test information or an error message.
+ */
 export const getTestById = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json( "Missing test ID.");
-
-  //const testPlanId = id; 
 
   try {
     const result = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
@@ -45,7 +58,13 @@ export const getTestById = async (req, res) => {
   }
 };
 
-// POST start a test
+/** * POST start a test by test plan ID and test runner ID.
+ * It checks if the test plan exists, if the test runner is available, and then starts the test.
+ *
+ * @param {Object} req - Express request object containing testPlanId and testRunnerId in body.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message with testRunId or an error message.
+ */
 export const startTest = async (req, res) => {
   //testId is actually the test_plan_id, not the test id
   const { testId, testRunnerId } = req.body;
@@ -176,9 +195,13 @@ export const startTest = async (req, res) => {
   }
 };
 
-//DELETE a test
+/**
+ * DELETE a test
+ * @param {Object} req - Express request object containing the test ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message or an error message.
+ */
 export const deleteTest = async (req, res) => {
-  //The id here is testId after checking in the GUI
   const { id } = req.params;
   let runnerId, runnerUrl;
   if (!id) return res.status(400).json("Missing test ID.");
@@ -227,7 +250,11 @@ export const deleteTest = async (req, res) => {
   }
 };
 
-// POST restart a test by test id
+/** * POST restart a test by test ID
+ * @param {Object} req - Express request object containing the test ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message with new testRunId or an error message.
+ */
 export const restartTest = async (req, res) => {
   const { id } = req.params;
   if (!id) {
@@ -333,7 +360,11 @@ export const restartTest = async (req, res) => {
   }
 };
 
-//GET current test status
+/** * GET current test status
+ * @param {Object} req - Express request object containing the test ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends the current test status or an error message.
+ */
 export const getTestStatus = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing test ID.");
@@ -405,7 +436,11 @@ export const getTestStatus = async (req, res) => {
   }
 };
 
-//GET list of available tests
+/** * GET list of available tests
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a list of available tests or an error message.
+ */
 export const getAvailableTests = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM available_tests');
@@ -416,7 +451,12 @@ export const getAvailableTests = async (req, res) => {
   }
 };
 
-//GET list of available test runners - soll prüfen welche Runner an verfügbar sind für die Plattform
+/** * GET list of available test runners
+ * @param {Object} req - Express request object containing the test plan ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a list of available test runners or an error message.
+ */
+//TODO: soll prüfen welche Runner an verfügbar sind für die Plattform
 export const getAvailableRunners = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing test plan ID.");
@@ -447,7 +487,14 @@ export const getAvailableRunners = async (req, res) => {
   }
 };
 
-//POST reload tests from GitHub
+/** * POST reload tests from GitHub
+ * This function fetches test descriptors from a GitHub repository, updates or inserts them into the database,
+ * and removes any tests that are no longer present in the repository.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message with updated, failed, and deleted tests or an error message.
+ */
 export const reloadTests = async (req, res) => {
     console.log("Reloading test descriptors from GitHub.");
 
@@ -541,8 +588,11 @@ export const reloadTests = async (req, res) => {
     }
 };
 
-//GET last reload timestamp
-export const getLastReload = async (req, res) => {
+/** * GET last reload timestamp
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends the last reload timestamp or a message if not yet loaded.
+ */
+export const getLastReload = async (res) => {
   const result = await db.query('SELECT DISTINCT last_reload FROM available_tests');
   if (result.rows.length === 0) {
     res.status(200).json({
@@ -554,7 +604,11 @@ export const getLastReload = async (req, res) => {
   }
 };
 
-//GET sends stop to TestRunner that executes the specified test
+/**GET sends stop request to TestRunner that executes the specified test
+ * @param {Object} req - Express request object containing the test ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message or an error message.
+ */
 export const stopTest = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing required test ID");
@@ -600,7 +654,11 @@ export const stopTest = async (req, res) => {
     }
 };
 
-//GET sends resume to TestRunner that executes the specified test - if the test was stopped
+/**GET sends resume to TestRunner that executes the specified test - if the test was stopped
+ * @param {Object} req - Express request object containing the test ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message or an error message.
+ */
 export const resumeTest = async (req, res) => {
   const { id } = req.params;
   if (!id) return res.status(400).json("Missing required test ID");

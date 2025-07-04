@@ -1,7 +1,19 @@
 import db from '../config/db.js';
 import axios from 'axios';
 
-//GET paginated list of test runners
+/**
+  * Controller for managing test runners.
+  * Provides endpoints for retrieving, registering, and updating test runners,
+  * as well as handling heartbeats and completed test reports.
+  *
+  * @module runnerController
+  */
+
+/** * GET paginated list of test runners
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a paginated list of test runners or an error message.
+ */
 export const getAllRunners = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10000;
@@ -22,7 +34,11 @@ export const getAllRunners = async (req, res) => {
   }
 };
 
-//GET detailed test runner information
+/** * GET detailed information about a specific test runner by its ID.
+ * @param {Object} req - Express request object containing the runner ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends the test runner details or an error message.
+ */
 export const getRunnerById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -39,7 +55,11 @@ export const getRunnerById = async (req, res) => {
   }
 };
 
-// GET available runners for test xyz based on its required platform
+/** * GET available runners for a specific test based on its required platform.
+ * @param {Object} req - Express request object containing the test ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends the list of available runners or an error message.
+ */
 export const getAvailableRunnerForAvailableTest = async (req, res) => {
   const { id:testId } = req.params;
 
@@ -107,7 +127,11 @@ export const getAvailableRunnerForAvailableTest = async (req, res) => {
 //   }
 // };
 
-// POST Heartbeat weiterleiten und prüfen, ob Runner erreichbar ist
+/** * POST Sends a heartbeat request to a specific test runner to check if it is reachable and updates its status in the database.
+ * @param {Object} req - Express request object containing the runner ID in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends the updated status of the runner or an error message.
+ */
 export const sendHeartbeat = async (req, res) => {
   const { id } = req.params;
 
@@ -238,7 +262,11 @@ export const sendHeartbeat = async (req, res) => {
   }
 };
 
-// POST empfängt die regelmäßigen Heartbeats von den Runnern
+/** * POST Receives a regular heartbeat from test runner and updates its status in the database.
+ * @param {Object} req - Express request object containing the runner ID in params and heartbeat data in body.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message or an error response.
+ */
 export const receiveHeartbeat = async (req, res) => {
   const { id: runnerId } = req.params;
   const {
@@ -330,7 +358,14 @@ export const receiveHeartbeat = async (req, res) => {
   }
 };
 
-// POST register a new test runner
+/** * POST Register a new test runner or updates an existing one.
+ * If the runner is already registered, it updates its details.
+ * If the runner has an active test, it sets the test status to FAILED.
+ *
+ * @param {Object} req - Express request object containing runner details in body.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message or an error response.
+ */
 export const registerRunner = async (req, res) => {
   const { runnerId, url, platforms } = req.body;
 
@@ -372,7 +407,11 @@ export const registerRunner = async (req, res) => {
   }
 };
 
-//POST completed erhalten und report speichern
+/** * POST Receives a completed test report from a test runner and updates the test status in the database.
+ * @param {Object} req - Express request object containing the report in body and testRunId in params.
+ * @param {Object} res - Express response object to send the result.
+ * @returns {Promise<void>} Sends a success message or an error response.
+ */
 export const receiveCompleted = async (req, res) => {
   const { report } = req.body;
   const { testRunId } = req.params;
@@ -406,6 +445,13 @@ export const receiveCompleted = async (req, res) => {
   }
 };
 
+/** * Updates the status of a test runner based on its heartbeat response.
+ * If the runner reports an error, it updates the test status to FAILED if an active test exists.
+ * If the runner is IDLE, it clears the active test.
+ *
+ * @param {Object} runner - The test runner object containing its details.
+ * @returns {Promise<void>} Updates the runner and test statuses in the database.
+ */
 export const heartbeatUpdate = async (runner) => {
   const now = new Date();
   try {
