@@ -9,7 +9,6 @@ runner_state = {
     "last_updated": time.time()
 }
 
-# Definiere den Handler, der auf HTTP-Anfragen reagiert
 class SimpleRequestHandler(BaseHTTPRequestHandler):
 
     def _send_json(self, response_data, status_code=200):
@@ -19,29 +18,29 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response_data).encode('utf-8'))
 
     def do_GET(self):
-        # Beispiel: Antwort auf GET-Anfrage
         if self.path == "/test":
             response = {
                 "message": "Test ist gelungen!",
                 "status": "Jawohl Bruder"
             }
             self._send_json(response)
-            
+
         elif self.path.startswith("/stop-test/"):
-            test_plan_id = self.path.split("/stop-test/")[1]
+            test_run_id = self.path.split("/stop-test/")[1]
             runner_state["status"] = "PAUSED"
             runner_state["last_updated"] = time.time()
-            response = {
-                "message": f"Test plan mit ID {test_plan_id} wurde gestoppt.",
-                "status": runner_state["status"]
-            }
 
+            response = {
+                "testRunId": test_run_id,
+                "message": f"Test run {test_run_id} wurde gestoppt.",
+                "errorcode": None,
+                "errortext": None
+            }
             self._send_json(response)
 
         elif self.path.startswith("/resume-test/"):
             test_run_id = self.path.split("/resume-test/")[1]
 
-            # Prüfe, ob TestRunId passt
             if test_run_id != runner_state["test_run_id"]:
                 self.send_response(404)
                 self.end_headers()
@@ -51,12 +50,12 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             runner_state["last_updated"] = time.time()
 
             response = {
+                "testRunId": test_run_id,
                 "message": f"Test run {test_run_id} wurde fortgesetzt.",
-                "status": runner_state["status"],
-                "testRunId": test_run_id
+                "errorcode": None,
+                "errortext": None
             }
             self._send_json(response)
-
 
         elif self.path.startswith("/restart-test/"):
             old_test_run_id = self.path.split("/restart-test/")[1]
@@ -67,19 +66,22 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             runner_state["last_updated"] = time.time()
 
             response = {
-                "oldTestRunId": old_test_run_id,
                 "testRunId": test_run_id,
-                "message": f"Test plan mit neuen test run ID {test_run_id} wurde neu gestartet.",
-                "status": runner_state["status"]
+                "message": f"Test run neu gestartet. Neue ID: {test_run_id}",
+                "errorcode": None,
+                "errortext": None
             }
-
             self._send_json(response)
 
         elif self.path.endswith("/heartbeat"):
             response = {
+                "timestamp": time.time(),
                 "status": runner_state["status"],
-                "lastTestRunId": runner_state["test_run_id"],
-                "timestamp": runner_state["last_updated"]
+                "sequence": int(time.time()),
+                "uptimeSeconds": int(time.time() - runner_state["last_updated"]),
+                "message": f"Heartbeat OK. Status: {runner_state['status']}",
+                "errorcode": None,
+                "errortext": None
             }
             self._send_json(response)
 
@@ -104,19 +106,15 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
                 "message": "Test läuft"
             }
             self._send_json(response)
-     
+
         else:
             self.send_response(404)
             self.end_headers()
-        
 
     def do_POST(self):
-        # Beispiel: Antwort auf POST-Anfrage
         if self.path == "/start-test":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
-
-            # Simuliere, dass wir die JSON-Daten empfangen und bearbeiten
             data = json.loads(post_data)
 
             test_run_id = str(uuid.uuid4())
@@ -126,17 +124,16 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
 
             response = {
                 "testRunId": test_run_id,
-                "received": data,
-                "status": runner_state["status"]
+                "message": f"Test erfolgreich gestartet mit ID {test_run_id}",
+                "errorcode": None,
+                "errortext": None
             }
 
             self._send_json(response)
-            
         else:
             self.send_response(404)
             self.end_headers()
 
-# Server starten
 def run(server_class=HTTPServer, handler_class=SimpleRequestHandler, port=8082):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)

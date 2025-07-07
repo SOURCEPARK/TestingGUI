@@ -18,20 +18,20 @@ const createSchema = async () => {
   // tests (noch ohne FK zu test_runners)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS tests (
-      id UUID PRIMARY KEY,                 -- Eindeutige ID für diesen konkreten Testlauf (nicht test_plan_id)
+      id UUID PRIMARY KEY,                -- Eindeutige ID für diesen konkreten Testlauf (nicht test_plan_id)
       name VARCHAR(255) NOT NULL,         -- Anzeigename des Tests (kommt aus available_tests)
       status VARCHAR(50),                 -- Status des Testlaufs: z.B. "RUNNING", "PASSED", "FAILED", ...
       test_runner_id UUID,                -- Verweis auf den Test Runner, der diesen Test ausführt (FK zur test_runners-Tabelle)
       progress FLOAT,                     -- Fortschritt des Testlaufs in Prozent (z.B. 0.0–100.0)
       testrun_id UUID,                    -- Laufzeit-ID für den Testlauf, kommt vom Testrunner bei Start (API-spezifisch)
-      start_time TIMESTAMP,              -- Zeitpunkt des Teststarts
+      start_time TIMESTAMP,               -- Zeitpunkt des Teststarts
       elapsed_seconds FLOAT,              -- Vergangene Zeit in Sekunden seit Start
       error_code TEXT,                    -- Fehlercode bei Abbruch oder Problemen (z.B. "500", "TIMEOUT", ...)
       error_text TEXT,                    -- Fehlermeldung im Klartext
       report TEXT,                        -- Abschlussbericht des Tests
       description TEXT,                   -- Beschreibung des Tests (kommt z.B. aus README.md von GitHub)
       last_message TEXT,                  -- Letzte vom Testrunner übermittelte Nachricht (z.B. via Heartbeat)
-      test_plan_id UUID,                 -- ID des zugehörigen Testplans (kommt aus available_tests, bleibt konstant)
+      test_plan_id UUID,                  -- ID des zugehörigen Testplans (kommt aus available_tests, bleibt konstant)
       platform TEXT,                      -- Plattform auf der der Test ausgeführt wird
       url TEXT                            -- URL zum Testplan
     );
