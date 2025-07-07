@@ -16,7 +16,7 @@ import { Component, EventEmitter, HostBinding, Output } from '@angular/core';
         <h2
           class="mt-6 text-center text-xl/9 font-bold tracking-tight text-gray-900"
         >
-          Melden Sie sich an der Datenbank an
+          Melden Sie sich an der Testing Gui
         </h2>
       </div>
 

@@ -188,7 +188,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
               <button
                 class="text-orange-600 hover:text-orange-800 cursor-pointer"
-                (click)="onHeartbeatClicked($event, test.id)"
+                (click)="onGetStatusClicked($event, test.id)"
                 aria-label="Heartbeat"
               >
                 <svg
@@ -301,7 +301,7 @@ export class TestsListComponent implements OnInit {
   }
 
   /* --------------- Aktionen ---------------- */
-  async onHeartbeatClicked(e: Event, id: string): Promise<void> {
+  async onGetStatusClicked(e: Event, id: string): Promise<void> {
     e.stopPropagation();
     this.toast.show('Heartbeat wird angefordert …', 'success');
 
