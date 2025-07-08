@@ -525,7 +525,7 @@ export const heartbeatUpdate = async (runner) => {
             runnerStatus,
             response.data.message || 'Runner is now idle.',
             now.toISOString(),
-            Date.now(),
+            Number(timestamp),
             runner.id
           ]
         );
@@ -541,7 +541,7 @@ export const heartbeatUpdate = async (runner) => {
              last_update = $4
          WHERE id = $5`,
         [
-          Date.now(),
+          Number(timestamp),
           runnerStatus,
           response.data.message || 'Runner responded to health check.',
           now.toISOString(),
@@ -574,13 +574,11 @@ export const heartbeatUpdate = async (runner) => {
              last_message = $1,
              error_code = $2,
              error_text = $3,
-             progress = $4
          WHERE id = $5`,
         [
           'Runner did not respond to health check.',
           '503',
           'Runner did not respond to health check.',
-          0.0,
           runner.active_test
         ]
       );
