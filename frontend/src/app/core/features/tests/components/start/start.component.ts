@@ -26,7 +26,7 @@ import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
   template: `
     <form [formGroup]="forms" class="mx-auto max-w-7xl py-4 sm:px-6 lg:px-8">
       <div class="px-4 sm:px-0">
-        <h3 class="text-base/7 font-semibold text-gray-900">Test Starten</h3>
+        <h3 class="text-base/7 font-semibold text-gray-900">Test starten</h3>
         <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">
           Starten Sie einen neuen Test mit einem Testrunner.
         </p>

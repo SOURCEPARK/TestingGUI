@@ -61,7 +61,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
               d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
             ></path>
           </svg>
-          Testpläne Laden
+          Testpläne laden
         </button>
         <button
           id="new-client-button"
@@ -423,7 +423,7 @@ export class TestsListComponent implements OnInit {
   formatReloadTime(timestamp: string | null | undefined): string {
     if (!timestamp) return 'unbekannt';
     const date = new Date(timestamp);
-    return `Letztes Laden der Testpläne: ${date.toLocaleString('de-DE', {
+    return `Zuletzt geladen: ${date.toLocaleString('de-DE', {
       weekday: 'short', // z. B. "Di."
       year: 'numeric',
       month: 'long', // z. B. "Juni"
