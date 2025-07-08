@@ -89,18 +89,6 @@ const createSchema = async () => {
   END $$;
 `);
 
-  // action_logs
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS action_logs (
-      id SERIAL PRIMARY KEY,
-      test_id UUID REFERENCES tests(id),
-      runner_id UUID REFERENCES test_runners(id),
-      code INTEGER,
-      message TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-
   console.log('Tabellen erfolgreich erstellt.');
 };
 
