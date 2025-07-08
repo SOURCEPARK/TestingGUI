@@ -26,9 +26,9 @@ DELETE | /:id             | Löscht einen Test
 ### 1. Eine paginierte Liste von Tests empfangen
 - **Endpoint**: GET `/`
 - **Beschreibung**: Gibt eine paginierte Liste von Tests zurück.
-- **Path Parameter**: 
-    - page: Seitenzahl für die Paginierung (Standardwert ist 1).
-    - limit: Anzahl der Tests pro Seite (Standardwert: 10000).
+- **Query Parameter**: 
+    - `page`: Seitenzahl für die Paginierung (Standardwert ist 1).
+    - `limit`: Anzahl der Tests pro Seite (Standardwert: 10000).
 - **Request Body**: Der Request Body muss leer sein.
 - **Response**:
     ```json

@@ -1,3 +1,9 @@
+/**
+ * @file cleanup.js
+ * This module provides functionality to clean up old test runners from the database.
+ * It defines a function to remove runners that have not sent a heartbeat within a specified threshold,
+ * and a function to start a periodic cleanup job.
+ */
 export const DEFAULT_THRESHOLD_MS = 48 * 60 * 60 * 1000; // 48 hours
 export const DEFAULT_INTERVAL_MS = 60 * 60 * 1000; // run hourly
 

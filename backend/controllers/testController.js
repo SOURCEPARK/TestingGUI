@@ -480,41 +480,50 @@ export const getAvailableTests = async (req, res) => {
   }
 };
 
+//TODO: seems unused, remove?
 /** * GET list of available test runners of the test plan required platform.
  * @param {Object} req - Express request object containing the test plan ID in params.
  * @param {Object} res - Express response object to send the result.
  * @returns {Promise<void>} Sends a list of available test runners or an error message.
  */
-//TODO: soll prüfen welche Runner an verfügbar sind für die Plattform
-export const getAvailableRunners = async (req, res) => {
-  const { id } = req.params;
-  if (!id) return res.status(400).json("Missing test plan ID.");
+// export const getAvailableRunners = async (req, res) => {
+//   const { id } = req.params;
+//   if (!id) return res.status(400).json("Missing test plan ID.");
 
-  const testPlanId = id;
+//   const testPlanId = id;
 
-  try {
-    const testResult = await db.query('SELECT id FROM tests WHERE test_plan_id = $1', [testPlanId]);
-    if (testResult.rows.length === 0) {
-      return res.status(404).json("Test Plan ID not found");
-    }
+//   try {
+//     const testResult = await db.query('SELECT id, platform FROM tests WHERE test_plan_id = $1', [testPlanId]);
+//     if (testResult.rows.length === 0) {
+//       return res.status(404).json("Test Plan ID not found");
+//     }
+//     const testPlatforms = testResult.rows[0].platform ? testResult.rows[0].platform.split(',').map(p => p.trim()) : [];
 
-    const runnerResult = await db.query(`
-      SELECT id, name FROM test_runners WHERE status NOT IN ('ERROR', 'RUNNING')
-    `);
+//     const runnerResult = await db.query(`
+//       SELECT id, name, platform FROM test_runners WHERE status NOT IN ('ERROR', 'RUNNING')`);
+    
+//     if (runnerResult.rows.length === 0) {
+//       return res.status(404).json(`No available runners`);
+//     }
+    
+//     const availableRunners = runnerResult.rows.filter(runner => {
+//       const runnerPlatforms = runner.platforms ? runner.platforms.split(',').map(p => p.trim()) : [];
+//       return testPlatforms.some(testPlatform => runnerPlatforms.includes(testPlatform));
+//     });
 
-    if (runnerResult.rows.length === 0) {
-      return res.status(404).json(`No available runners for test ${id}`);
-    }else {
-      res.status(200).json({
-        message: `Available runners for test ${id}:`,
-        runners: runnerResult.rows
-      });
-    }
-  } catch (err) {
-    console.error(err);
-    res.status(500).json("Database error");
-  }
-};
+//     if (availableRunners.length === 0) {
+//       return res.status(404).json(`No available runners for test ${id}`);
+//     }else {
+//       res.status(200).json({
+//         message: `Available runners for test ${id}:`,
+//         runners: availableRunners
+//       });
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json("Database error");
+//   }
+// };
 
 /** * POST reload tests from GitHub
  * This function fetches test descriptors from a GitHub repository, updates or inserts them into the database,

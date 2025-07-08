@@ -16,7 +16,7 @@ router.get('/:id/status', testController.getTestStatus);
 //POST restart a test
 router.post('/:id/restart', testController.restartTest);
 //GET list of available test runners
-router.get('/:id/runners', testController.getAvailableRunners);
+// router.get('/:id/runners', testController.getAvailableRunners); //seems unused, remove if not needed
 //DELETE a test
 router.delete('/:id', testController.deleteTest);
 //GET detailed test information

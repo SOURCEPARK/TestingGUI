@@ -16,7 +16,9 @@ GET | /:id/available | Abfrage nach verfügbaren Runner für einen bestimmten Te
 ### 1. GET paginierte Liste von Test Runner
 - **Endpoint**: GET `/`
 - **Beschreibung**: Gibt eine paginierte Liste aller Test Runner zurück
-- **Path Parameter**: None
+- **Query Parameter**:
+    - `page`: Seitenzahl für die Paginierung (Standardwert ist 1).
+    - `limit`: Anzahl der Tests pro Seite (Standardwert: 10000).
 - **Request Body**: Der Request Body muss leer sein.
 - **Response**:
     ```json
@@ -69,10 +71,12 @@ GET | /:id/available | Abfrage nach verfügbaren Runner für einen bestimmten Te
 - **Request Body**: Der Request Body muss leer sein.
 - **Response**:
     ```json
-    {
-        "id": "11111111-1111-1111-1111-111111111111",
-        "name": "11111111-1111-1111-1111-111111111111"
-    }
+    [
+        {
+            "id": "11111111-1111-1111-1111-111111111111",
+            "name": "11111111-1111-1111-1111-111111111111"
+        }
+    ]
     ```
 
 
