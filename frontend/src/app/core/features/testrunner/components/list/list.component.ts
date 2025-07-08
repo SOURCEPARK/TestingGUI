@@ -82,7 +82,7 @@ import { NgClass } from '@angular/common';
                     'text-blue-600': testrunner.status.toLowerCase() === 'idle',
                     'text-green-600':
                       testrunner.status.toLowerCase() === 'running',
-                    'text-red-600': testrunner.status.toLowerCase() !== 'error'
+                    'text-red-600': testrunner.status.toLowerCase() === 'error'
                   }"
                 >
                   {{ testrunner.status }}

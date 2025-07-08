@@ -36,7 +36,7 @@ import { NgClass } from '@angular/common';
                 'text-green-600':
                   testrunnerDetailData().status.toLowerCase() === 'running',
                 'text-red-600':
-                  testrunnerDetailData().status.toLowerCase() !== 'error'
+                  testrunnerDetailData().status.toLowerCase() === 'error'
               }"
             >
               {{ testrunnerDetailData().status }}
