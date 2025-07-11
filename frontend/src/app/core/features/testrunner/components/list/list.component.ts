@@ -22,7 +22,7 @@ import { NgClass } from '@angular/common';
   imports: [RouterLink, NgClass],
   template: `
     <div id="testrunner-list" class="flex flex-col h-full px-4 sm:px-6 lg:px-8">
-      <!-- Header -->
+      <!-- Überschrift -->
       <div class="sm:flex sm:items-center">
         <div class="sm:flex-auto">
           <h1 class="text-base font-semibold text-gray-900">
@@ -32,7 +32,7 @@ import { NgClass } from '@angular/common';
         </div>
       </div>
 
-      <!-- Liste -->
+      <!-- Tabelle mit allen Testrunner-Einträgen -->
       <div class="flex-1 overflow-y-auto mt-4">
         <table class="min-w-full divide-y divide-gray-300">
           <thead>
@@ -71,10 +71,12 @@ import { NgClass } from '@angular/common';
               class="hover:bg-gray-100 cursor-pointer"
               [routerLink]="[testrunner.id]"
             >
+              <!-- Name -->
               <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                 {{ testrunner.name }}
               </td>
 
+              <!-- Status mit farblicher Hervorhebung -->
               <td class="whitespace-nowrap px-3 py-4 text-sm">
                 <span
                   class="inline-flex items-center gap-2"
@@ -89,14 +91,17 @@ import { NgClass } from '@angular/common';
                 </span>
               </td>
 
+              <!-- Plattformliste -->
               <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
                 {{ testrunner.platform.join(', ') }}
               </td>
 
+              <!-- Zeitpunkt des letzten Heartbeats -->
               <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                 {{ testrunner.lastHeartbeat }}
               </td>
 
+              <!-- Aktionsbutton zum manuellen Heartbeat -->
               <td class="whitespace-nowrap px-3 py-4 text-sm flex gap-2">
                 <button
                   class="text-orange-600 hover:text-orange-800 w-6 h-6"
@@ -128,35 +133,25 @@ import { NgClass } from '@angular/common';
   styles: ``,
 })
 export class ListComponent implements OnInit {
-  /* ------------------------------------------------------------------ */
-  /*                   Eingangsdaten (read-only InputSignal)            */
-  /* ------------------------------------------------------------------ */
+  // Eingabewert vom Resolver (Initialdaten)
   initialTestrunners = input<testrunnerListElement[]>();
+
+  // Route- und Service-Injektion
   private readonly route = inject(ActivatedRoute);
-
-  /* ------------------------------------------------------------------ */
-  /*           Beschreibbares Signal zum Aktualisieren der Tabelle      */
-  /* ------------------------------------------------------------------ */
-  testrunners: WritableSignal<testrunnerListElement[]> = signal<
-    testrunnerListElement[]
-  >([]);
-
-  /* ------------------------------------------------------------------ */
-  /*                         Services / DI                              */
-  /* ------------------------------------------------------------------ */
   private readonly dialog = inject(Dialog);
   private readonly testrunnerService = inject(TestrunnerListSerivce);
 
-  /* ------------------------------------------------------------------ */
-  /*                            Lifecycle                               */
-  /* ------------------------------------------------------------------ */
+  // Schreibbares Signal für die Tabelle
+  testrunners: WritableSignal<testrunnerListElement[]> = signal([]);
+
   ngOnInit(): void {
+    // Über Resolver geladene Daten initial setzen
     const data = this.route.snapshot.data['testrunners'] as
       | testrunnerListElement[]
       | undefined;
     this.testrunners.set(data ?? []);
 
-    // Set up an interval to reload testrunners every 30 seconds
+    // Alle 30 Sekunden neu laden
     setInterval(() => {
       this.reloadTestrunners().catch((err) =>
         console.error('Fehler beim Aktualisieren der Testrunner:', err)
@@ -164,12 +159,11 @@ export class ListComponent implements OnInit {
     }, 30000);
   }
 
-  /* ------------------------------------------------------------------ */
-  /*                             Aktionen                               */
-  /* ------------------------------------------------------------------ */
+  /**
+   * Sendet manuell einen Heartbeat für den angegebenen Testrunner
+   */
   async onHeartbeatClicked(event: Event, id: string): Promise<void> {
-    event.stopPropagation();
-
+    event.stopPropagation(); // verhindert Navigation beim Button-Klick
     try {
       await firstValueFrom(this.testrunnerService.triggerHeartbeat(id));
       await this.reloadTestrunners();
@@ -178,15 +172,11 @@ export class ListComponent implements OnInit {
     }
   }
 
-  /** Ruft aktuelle Liste ab und schreibt sie ins writable Signal */
+  /**
+   * Holt aktuelle Daten vom Server und aktualisiert das Signal
+   */
   private async reloadTestrunners(): Promise<void> {
     const data = await firstValueFrom(this.testrunnerService.getTestrunners());
     this.testrunners.set(data);
   }
-
-  //TODO: to lower case checken
-
-  /* ------------------------------------------------------------------ */
-  /*                               Icons                                */
-  /* ------------------------------------------------------------------ */
 }

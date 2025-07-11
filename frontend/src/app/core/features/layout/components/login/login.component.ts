@@ -7,6 +7,7 @@ import { Component, EventEmitter, HostBinding, Output } from '@angular/core';
     <div
       class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50"
     >
+      <!-- Logo + Überschrift -->
       <div class="sm:mx-auto sm:w-full sm:max-w-md h-full">
         <img
           class="mx-auto h-20 w-auto"
@@ -20,15 +21,18 @@ import { Component, EventEmitter, HostBinding, Output } from '@angular/core';
         </h2>
       </div>
 
+      <!-- Formularfeld -->
       <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
         <div class="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
           <form class="space-y-6">
+            <!-- Benutzername / E-Mail -->
             <div>
               <label
                 for="email"
                 class="block text-sm/6 font-medium text-gray-900"
-                >E-Mail Adresse</label
               >
+                E-Mail Adresse
+              </label>
               <div class="mt-2">
                 <input
                   type="text"
@@ -39,12 +43,14 @@ import { Component, EventEmitter, HostBinding, Output } from '@angular/core';
               </div>
             </div>
 
+            <!-- Passwort -->
             <div>
               <label
                 for="password"
                 class="block text-sm/6 font-medium text-gray-900"
-                >Passwort</label
               >
+                Passwort
+              </label>
               <div class="mt-2">
                 <input
                   type="password"
@@ -56,6 +62,7 @@ import { Component, EventEmitter, HostBinding, Output } from '@angular/core';
               </div>
             </div>
 
+            <!-- Login-Button -->
             <div>
               <button
                 type="button"
@@ -73,10 +80,15 @@ import { Component, EventEmitter, HostBinding, Output } from '@angular/core';
   styles: ``,
 })
 export class LoginComponent {
+  // Damit das äußere Layout immer volle Höhe bekommt
   @HostBinding('class') class = 'h-full';
 
+  // Wird ausgelöst, sobald Benutzer auf "Anmelden" klickt
   @Output() loggedIn = new EventEmitter<void>();
 
+  /**
+   * Simulierter Login-Vorgang — in echter App hier Authentifizierung durchführen
+   */
   onLogin(): void {
     this.loggedIn.emit();
   }

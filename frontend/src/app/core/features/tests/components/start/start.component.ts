@@ -16,7 +16,6 @@ import {
 } from '../../services/start.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MarkdownModule } from 'ngx-markdown';
 import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
 
 @Component({
@@ -102,16 +101,22 @@ import { MarkdownPipe } from '../../../../shared/pipes/markdown.pipe';
   `,
 })
 export class StartComponent {
-  /* DI */
+  /* ------------------------------------------------------------------ */
+  /*                    Abhängigkeiten (DI)                             */
+  /* ------------------------------------------------------------------ */
   private readonly svc = inject(TestStartService);
   private readonly toast = inject(ToastService);
   private readonly location = inject(Location);
 
-  /* Signale */
-  availableTests = signal<AvailableTest[]>([]);
-  runners = signal<TestRunner[]>([]);
+  /* ------------------------------------------------------------------ */
+  /*                        Reaktive Zustände                           */
+  /* ------------------------------------------------------------------ */
+  availableTests = signal<AvailableTest[]>([]); // Liste verfügbarer Tests
+  runners = signal<TestRunner[]>([]); // Testrunner zu ausgewähltem Test
 
-  /* Reactive Form */
+  /* ------------------------------------------------------------------ */
+  /*                         Formulargruppe                             */
+  /* ------------------------------------------------------------------ */
   forms = new FormGroup({
     testDefinitionForm: new FormControl<string | null>(null),
     testRunnersForm: new FormControl<string | null>({
@@ -120,72 +125,66 @@ export class StartComponent {
     }),
   });
 
+  /* Aktuelle Auswahl der Testdefinition als Signal (über `toSignal`) */
   readonly selectedTestId = toSignal(
     this.forms.controls.testDefinitionForm.valueChanges,
     { initialValue: null }
   );
 
+  /* Beschreibung des aktuell gewählten Tests */
   readonly selectedTestDescription = computed(() => {
     const testId = this.selectedTestId();
     if (!testId) return null;
     return this.availableTests().find((t) => t.id === testId)?.desc ?? null;
   });
 
+  /* ------------------------------------------------------------------ */
+  /*                         Initialisierung                            */
+  /* ------------------------------------------------------------------ */
   constructor() {
-    /* 1️⃣ Verfügbare Tests initial laden */
+    // 1️⃣ Verfügbare Tests vom Backend laden
     this.svc.getAvailableTests().subscribe({
       next: (tests) => this.availableTests.set(tests),
       error: () =>
         this.toast.show('Fehler beim Laden der verfügbaren Tests', 'error'),
     });
 
-    /* 2️⃣ Reaktion auf Test-Auswahl – mithilfe von toSignal() */
-    const selectedTestId = toSignal(
-      this.forms.controls.testDefinitionForm.valueChanges,
-      { initialValue: null }
-    );
-
-    this.selectedTestDescription = computed(() => {
-      const testId = selectedTestId();
-      if (!testId) return null;
-      return this.availableTests().find((t) => t.id === testId)?.desc ?? null;
-    });
-
+    // 2️⃣ Effekt: Bei Auswahl eines Tests → Testrunner nachladen
     effect(() => {
-      const testId = selectedTestId();
-      console.log(testId);
+      const testId = this.selectedTestId();
+
       if (!testId) {
+        // Test abgewählt → Runner-Feld deaktivieren + leeren
         this.forms.controls.testRunnersForm.disable();
         this.forms.controls.testRunnersForm.reset();
         this.runners.set([]);
         return;
       }
 
+      // Test gewählt → Runner-Feld aktivieren
       this.forms.controls.testRunnersForm.enable();
       this.forms.controls.testRunnersForm.reset();
 
+      // Runner vom Backend laden
       this.svc.getRunnersForTest(testId).subscribe({
         next: (r) => this.runners.set(r),
         error: () =>
           this.toast.show('Fehler beim Laden der Testrunner', 'error'),
       });
     });
-
-    // ⬇️ Beschreibung dynamisch abhängig vom ausgewählten Test
-    this.selectedTestDescription = computed(() => {
-      const testId = selectedTestId();
-      if (!testId) return null;
-      return this.availableTests().find((t) => t.id === testId)?.desc ?? null;
-    });
   }
 
-  /* Kann Start-Button aktiv sein? */
+  /* ------------------------------------------------------------------ */
+  /*                         Benutzeraktionen                           */
+  /* ------------------------------------------------------------------ */
+
+  /** Prüft, ob "Test starten"-Button aktiv sein kann */
   canStart(): boolean {
     const { testDefinitionForm, testRunnersForm } = this.forms.controls;
     return !!testDefinitionForm.value && !!testRunnersForm.value;
   }
 
-  /* Start-Button */
+  /** Startet den Test und navigiert zurück */
   onStartTestClicked(): void {
     const testId = this.forms.controls.testDefinitionForm.value!;
     const runnerId = this.forms.controls.testRunnersForm.value!;
@@ -199,7 +198,7 @@ export class StartComponent {
     });
   }
 
-  /* Abbrechen-Button */
+  /** Geht zurück zur vorherigen Seite */
   onBackButtonClicked(): void {
     this.location.back();
   }

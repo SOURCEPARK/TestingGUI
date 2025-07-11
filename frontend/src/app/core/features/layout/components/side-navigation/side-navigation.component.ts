@@ -7,9 +7,11 @@ import { RouterModule } from '@angular/router';
   template: `
     <div class="flex bg-white h-full w-full">
       <div class="flex flex-col w-full">
+        <!-- Hauptbereich der Navigation -->
         <div
           class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6"
         >
+          <!-- Logo oben -->
           <div class="flex h-16 shrink-0 items-center pt-4">
             <img
               class="h-11 w-auto m-auto object-contain"
@@ -17,15 +19,18 @@ import { RouterModule } from '@angular/router';
               alt="Your Company"
             />
           </div>
+
           <hr />
-          <nav class="flex  flex-1 flex-col">
+
+          <!-- Navigationslinks -->
+          <nav class="flex flex-1 flex-col">
             <ul
               role="list"
               class="flex flex-1 justify-between flex-col gap-y-7"
             >
               <li>
                 <ul role="list" class="-mx-2 space-y-1">
-                  <!-- Einsätze -->
+                  <!-- Link zu "Tests" -->
                   <li>
                     <a
                       [routerLink]="['tests']"
@@ -35,7 +40,8 @@ import { RouterModule } from '@angular/router';
                       Tests
                     </a>
                   </li>
-                  <!-- Klienten -->
+
+                  <!-- Link zu "Testrunner" -->
                   <li>
                     <a
                       [routerLink]="['/testrunner']"
@@ -45,7 +51,8 @@ import { RouterModule } from '@angular/router';
                       Testrunner
                     </a>
                   </li>
-                  <!-- Mitarbeiter -->
+
+                  <!-- Hier könnten weitere Navigationspunkte ergänzt werden -->
                 </ul>
               </li>
             </ul>
@@ -56,4 +63,6 @@ import { RouterModule } from '@angular/router';
   `,
   styles: ``,
 })
-export class SideNavigationComponent {}
+export class SideNavigationComponent {
+  // Keine zusätzliche Logik notwendig – alles wird rein über Template geregelt
+}

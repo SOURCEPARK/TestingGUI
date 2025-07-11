@@ -4,8 +4,13 @@ import { map, Observable } from 'rxjs';
 
 @Injectable()
 export class TestrunnerListSerivce {
+  // HTTP-Client wird per Injection bereitgestellt
   private readonly http = inject(HttpClient);
 
+  /**
+   * Ruft alle registrierten Testrunner vom Server ab und
+   * transformiert die Rohdaten in ein UI-freundliches Format.
+   */
   getTestrunners() {
     return this.http.get<TestrunnerListResponse[]>('/api/test-runner').pipe(
       map((testsRunner) =>
@@ -20,14 +25,22 @@ export class TestrunnerListSerivce {
     );
   }
 
+  /**
+   * Sendet ein Heartbeat-Signal für einen spezifischen Testrunner.
+   * Diese Funktion wird z. B. durch UI-Interaktion ausgelöst.
+   */
   triggerHeartbeat(id: string): Observable<void> {
     return this.http.post<void>(`/api/test-runner/${id}/heartbeat`, {});
   }
 
+  /**
+   * Wandelt einen Zeitstempel (als String im UNIX-Format in ms)
+   * in eine menschenlesbare relative Zeitangabe um.
+   */
   private formatUnix(timestamp: string): string {
     if (!timestamp) return 'Unbekannt';
-    const now = Date.now(); // ms
-    const ts = Number(timestamp); // ms
+    const now = Date.now(); // aktuelle Zeit in Millisekunden
+    const ts = Number(timestamp); // Zeitstempel als Zahl
     const diffSeconds = (now - ts) / 1000;
 
     if (diffSeconds < 60) return `vor ${Math.round(diffSeconds)} Sekunden`;
@@ -36,15 +49,13 @@ export class TestrunnerListSerivce {
     return `vor ${Math.round(diffSeconds / 3600)} Stunden`;
   }
 }
-
 export interface testrunnerListElement {
-  id: string;
-  name: string;
-  status: string;
-  platform: string[];
-  lastHeartbeat: string;
+  id: string; // Eindeutige ID des Testrunners
+  name: string; // Anzeigename
+  status: string; // Aktueller Status (z. B. "idle", "running")
+  platform: string[]; // Unterstützte Plattformen
+  lastHeartbeat: string; // Zeitangabe in relativer Form (z. B. "vor 5 Minuten")
 }
-
 export interface TestrunnerListResponse {
   id: string;
   name: string;

@@ -7,7 +7,9 @@ import { ToastService } from '../../services/toast.service';
   standalone: true,
   imports: [CommonModule],
   template: `
+    <!-- Container für alle aktiven Toasts -->
     <div class="toast-container">
+      <!-- Jeder Toast wird abhängig vom Typ eingefärbt -->
       <div class="toast" *ngFor="let toast of toasts()" [ngClass]="toast.type">
         {{ toast.message }}
       </div>
@@ -15,6 +17,7 @@ import { ToastService } from '../../services/toast.service';
   `,
   styles: [
     `
+      /* Positionierung des Toast-Containers oben rechts im Viewport */
       .toast-container {
         position: fixed;
         top: 1rem;
@@ -25,6 +28,7 @@ import { ToastService } from '../../services/toast.service';
         z-index: 1000;
       }
 
+      /* Grundlayout jedes Toast-Elements */
       .toast {
         padding: 0.75rem 1rem;
         border-radius: 0.375rem;
@@ -34,22 +38,24 @@ import { ToastService } from '../../services/toast.service';
         animation: fadein 0.3s ease-out;
       }
 
+      /* Farben je nach Toast-Typ */
       .success {
-        background-color: #16a34a;
+        background-color: #16a34a; /* grün */
       }
 
       .error {
-        background-color: #dc2626;
+        background-color: #dc2626; /* rot */
       }
 
       .info {
-        background-color: #2563eb;
+        background-color: #2563eb; /* blau */
       }
 
       .warning {
-        background-color: #d97706;
+        background-color: #d97706; /* orange */
       }
 
+      /* Einfache Einblend-Animation */
       @keyframes fadein {
         from {
           opacity: 0;
@@ -64,6 +70,9 @@ import { ToastService } from '../../services/toast.service';
   ],
 })
 export class ToastContainerComponent {
+  // Zugriff auf den ToastService
   private toastService = inject(ToastService);
+
+  // Reaktive Liste aller Toast-Nachrichten (Signal)
   toasts = computed(() => this.toastService.toasts());
 }

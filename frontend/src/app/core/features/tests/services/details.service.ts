@@ -6,11 +6,19 @@ import { map, Observable, tap } from 'rxjs';
 export class TestDetailSerivce {
   private readonly http = inject(HttpClient);
 
+  /**
+   * 🔍 Holt die Detailinformationen zu einem bestimmten Test.
+   * Die API liefert ein Array mit einem einzelnen Eintrag – es wird das erste Element extrahiert.
+   *
+   * @param id Die ID des Tests
+   * @returns Ein Observable mit den Testdetails
+   */
   getTestDetails(id: string): Observable<testDetails> {
     return this.http.get<any[]>(`/api/test/${id}`).pipe(
-      tap(console.log), // zeigt das ganze Array in der Konsole
+      tap(console.log), // gibt die Rohdaten zur Fehleranalyse in der Konsole aus
       map((dataArray) => {
-        const data = dataArray[0]; // Nur das erste Element extrahieren
+        const data = dataArray[0]; // Extrahiert das erste (und einzige) Element
+
         return {
           id: data.id,
           name: data.name,
@@ -33,18 +41,18 @@ export class TestDetailSerivce {
 }
 
 export interface testDetails {
-  id: string;
-  name: string;
-  status: string;
-  testrunner: string;
-  progress: number;
-  startTime: Date;
-  elapsedSeconds: number;
-  errorCode: string | null;
-  errorText: string | null;
-  report: string;
-  description: string;
-  lastReload: Date;
-  testrunId: string;
-  last_message: string;
+  id: string; // Eindeutige ID des Tests
+  name: string; // Anzeigename des Tests
+  status: string; // Aktueller Status (z. B. running, failed, completed, paused)
+  testrunner: string; // Zugewiesener Testrunner (ID)
+  progress: number; // Fortschritt in Prozent
+  startTime: Date; // Startzeit als JavaScript Date-Objekt
+  elapsedSeconds: number; // Dauer seit Start in Sekunden
+  errorCode: string | null; // Fehlercode, falls vorhanden
+  errorText: string | null; // Fehlermeldung, falls vorhanden
+  report: string; // Bericht im Markdown- oder Textformat
+  description: string; // Beschreibung des Tests (z. B. aus Testdefinition)
+  lastReload: Date; // Letzter Reload-Zeitpunkt (Date)
+  testrunId: string; // ID des übergeordneten Testlaufs
+  last_message: string; // Letzte bekannte Systemmeldung / Statusmeldung
 }
