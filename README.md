@@ -1,8 +1,8 @@
 # Express + PostgreSQL Docker-Setup
 
-## Voraussetzungen
+## Requirementes 
 
-- Docker & Docker Compose sind installiert
+- Docker & Docker Compose are installed
 
 ## .env Configuration
 
@@ -15,9 +15,18 @@ POSTGRES_DB
 PORT
 GITHUB_TOKEN
 ```
+GITHUB_TOKEN is a personal access token that is needed to synchronize the test descriptors from the repo
 
 ## Start
 
 ```bash
-docker-compose up --build
+docker compose up --build
+```
+
+## In casse of errors: 
+
+Always use the following command before using the Start command if there are errors in the building process:
+
+```
+docker compose down -v
 ```
