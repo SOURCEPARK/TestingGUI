@@ -3,42 +3,49 @@ import json
 import uuid
 import time
 
+# Shared state for the test runner
 runner_state = {
-    "status": "IDLE",
-    "test_run_id": None,
-    "last_updated": time.time()
+    "status": "IDLE",              # Current status: IDLE, RUNNING, PAUSED
+    "test_run_id": None,          # Unique ID of the current test run
+    "last_updated": time.time()   # Timestamp of last state change
 }
 
+# Custom HTTP request handler
 class SimpleRequestHandler(BaseHTTPRequestHandler):
 
+    # Helper method to send a JSON response
     def _send_json(self, response_data, status_code=200):
         self.send_response(status_code)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
         self.wfile.write(json.dumps(response_data).encode('utf-8'))
 
+    # Handle GET requests
     def do_GET(self):
         if self.path == "/test":
+            # Simple test endpoint
             response = {
-                "message": "Test ist gelungen!",
-                "status": "Jawohl Bruder"
+                "message": "Test was successful!",
+                "status": "Roger that"
             }
             self._send_json(response)
 
         elif self.path.startswith("/stop-test/"):
+            # Pause a test run
             test_run_id = self.path.split("/stop-test/")[1]
             runner_state["status"] = "PAUSED"
             runner_state["last_updated"] = time.time()
 
             response = {
                 "testRunId": test_run_id,
-                "message": f"Test run {test_run_id} wurde gestoppt.",
+                "message": f"Test run {test_run_id} was stopped.",
                 "errorcode": None,
                 "errortext": None
             }
             self._send_json(response)
 
         elif self.path.startswith("/resume-test/"):
+            # Resume a paused test run
             test_run_id = self.path.split("/resume-test/")[1]
 
             if test_run_id != runner_state["test_run_id"]:
@@ -51,13 +58,14 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
 
             response = {
                 "testRunId": test_run_id,
-                "message": f"Test run {test_run_id} wurde fortgesetzt.",
+                "message": f"Test run {test_run_id} resumed.",
                 "errorcode": None,
                 "errortext": None
             }
             self._send_json(response)
 
         elif self.path.startswith("/restart-test/"):
+            # Restart a test with a new ID
             old_test_run_id = self.path.split("/restart-test/")[1]
             test_run_id = str(uuid.uuid4())
 
@@ -67,13 +75,14 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
 
             response = {
                 "testRunId": test_run_id,
-                "message": f"Test run neu gestartet. Neue ID: {test_run_id}",
+                "message": f"Test restarted. New ID: {test_run_id}",
                 "errorcode": None,
                 "errortext": None
             }
             self._send_json(response)
 
         elif self.path.endswith("/heartbeat"):
+            # Return current runner heartbeat
             response = {
                 "timestamp": time.time(),
                 "status": runner_state["status"],
@@ -86,6 +95,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             self._send_json(response)
 
         elif self.path.startswith("/test-status/"):
+            # Return the status of a specific test run
             test_run_id = self.path.split("/test-status/")[1]
 
             if test_run_id != runner_state["test_run_id"]:
@@ -103,16 +113,19 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
                 "progress": 0.5,
                 "errorcode": "",
                 "errortext": "",
-                "message": "Test läuft"
+                "message": "Test running"
             }
             self._send_json(response)
 
         else:
+            # Unknown path
             self.send_response(404)
             self.end_headers()
 
+    # Handle POST requests
     def do_POST(self):
         if self.path == "/start-test":
+            # Start a new test
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data)
@@ -124,7 +137,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
 
             response = {
                 "testRunId": test_run_id,
-                "message": f"Test erfolgreich gestartet mit ID {test_run_id}",
+                "message": f"Test started successfully with ID {test_run_id}",
                 "errorcode": None,
                 "errortext": None
             }
@@ -134,11 +147,13 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
+# Start the HTTP server
 def run(server_class=HTTPServer, handler_class=SimpleRequestHandler, port=8082):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
-    print(f"Starte Server auf Port {port}...")
+    print(f"Starting server on port {port}...")
     httpd.serve_forever()
 
+# Entry point
 if __name__ == '__main__':
     run()
