@@ -31,7 +31,7 @@ import { RouterModule } from '@angular/router';
 })
 export class LayoutComponent {
   // Zustand, ob der Benutzer eingeloggt ist oder nicht
-  loggedIn = true;
+  loggedIn = true; // Zur Zeit initial auf true gesetzt, da bisher keine Zugangskontrolle vorgesehen ist
 
   // Wird vom LoginComponent ausgelöst, sobald Login erfolgreich war
   userLoggedIn() {
